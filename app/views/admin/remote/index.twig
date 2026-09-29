@@ -16,12 +16,29 @@
     <section class="panel">
         <header>Endpoint</header>
         <div class="term-add-body">
-            <p class="hint">Send the article HTML with your token. The post is published immediately.</p>
+            <p class="hint">Send the article HTML with your token. Extra fields are optional. The first image in the HTML becomes the featured image unless you set featured_image.</p>
             <code class="endpoint">POST {{ endpoint }}</code>
             <pre class="snippet">curl -X POST {{ endpoint }} \
   -H "X-Api-Token: YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "{\"title\":\"Article title\",\"category\":\"Houseplants\",\"tags\":[\"monstera\",\"care\"],\"seo_title\":\"SEO title\",\"seo_description\":\"Short description\",\"html\":\"&lt;p&gt;...&lt;/p&gt;\"}"</pre>
+  -d '{
+  "title": "Article title",
+  "html": "&lt;p&gt;Article HTML. The first &lt;img&gt; is the featured image.&lt;/p&gt;",
+  "excerpt": "Short lead shown in lists",
+  "slug": "article-title",
+  "status": "publish",
+  "category": "Houseplants",
+  "categories": ["Houseplants", "Guides"],
+  "tags": ["monstera", "care"],
+  "featured_image": "https://example.com/photo.jpg",
+  "comment_status": "open",
+  "seo_title": "Title search engines show",
+  "seo_description": "Description search engines show",
+  "seo_canonical": "https://example.com/article-title",
+  "seo_image": "https://example.com/share.jpg",
+  "seo_noindex": false,
+  "fields": {"price": "12"}
+}'</pre>
         </div>
     </section>
     <section class="panel">
