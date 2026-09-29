@@ -60,6 +60,9 @@ class FeaturedImage
 
     private function bytes(string $root, string $src): ?string
     {
+        if (str_starts_with($src, '//')) {
+            $src = 'https:' . $src;
+        }
         if (str_starts_with($src, '/uploads/')) {
             $file = $root . $src;
             return is_file($file) ? (string) file_get_contents($file) : null;
@@ -67,8 +70,21 @@ class FeaturedImage
         if (!preg_match('#^https?://#i', $src)) {
             return null;
         }
+        if (function_exists('curl_init')) {
+            $ch = curl_init($src);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT => 12,
+                CURLOPT_USERAGENT => 'Mozilla/5.0',
+            ]);
+            $bytes = curl_exec($ch);
+            $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            return is_string($bytes) && $bytes !== '' && $code < 400 ? $bytes : null;
+        }
         $bytes = @file_get_contents($src, false, stream_context_create([
-            'http' => ['timeout' => 8, 'follow_location' => 1, 'header' => "User-Agent: FlightCMS\r\n"],
+            'http' => ['timeout' => 12, 'follow_location' => 1, 'header' => "User-Agent: Mozilla/5.0\r\n"],
         ]), 0, 6_000_000);
         return is_string($bytes) && $bytes !== '' ? $bytes : null;
     }
