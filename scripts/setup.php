@@ -11,8 +11,8 @@ foreach ([
     'storage/logs',
     'storage/sessions',
     'storage/backups',
-    'public/uploads',
-    'public/assets/vendor',
+    'uploads',
+    'assets/vendor',
     'app/config',
 ] as $dir) {
     $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $dir);
@@ -30,8 +30,8 @@ if (!is_file($config) && is_file($sample)) {
 }
 
 $copies = [
-    'vendor/twbs/bootstrap-icons/font' => 'public/assets/vendor/bootstrap-icons',
-    'vendor/tinymce/tinymce' => 'public/assets/vendor/tinymce',
+    'vendor/twbs/bootstrap-icons/font' => 'assets/vendor/bootstrap-icons',
+    'vendor/tinymce/tinymce' => 'assets/vendor/tinymce',
 ];
 
 foreach ($copies as $from => $to) {

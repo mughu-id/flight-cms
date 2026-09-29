@@ -33,7 +33,7 @@ function hit(string $method, string $path, array $post = []): array
 }
 
 $server = proc_open(
-    'php -S 127.0.0.1:8123 -t public public/router.php',
+    'php -S 127.0.0.1:8123 -t . router.php',
     [1 => ['file', sys_get_temp_dir() . '/cms-server.log', 'w'], 2 => ['file', sys_get_temp_dir() . '/cms-server.err', 'w']],
     $pipes,
     $root

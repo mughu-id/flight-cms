@@ -15,7 +15,7 @@ return [
     ],
     'runway' => [
         'app_root' => 'app/',
-        'public_root' => 'public/',
-        'index_root' => 'public/index.php',
+        'public_root' => '',
+        'index_root' => 'index.php',
     ],
 ];

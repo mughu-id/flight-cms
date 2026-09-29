@@ -10,7 +10,7 @@ class AssetsPublishCommand extends AbstractBaseCommand
 {
     public function __construct(array $config)
     {
-        parent::__construct('assets:publish', 'Copy theme/plugin assets into public/', $config);
+        parent::__construct('assets:publish', 'Copy vendor assets into assets/', $config);
     }
 
     public function execute(): void

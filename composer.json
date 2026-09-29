@@ -48,7 +48,7 @@
         }
     },
     "scripts": {
-        "start": "@php -S localhost:1155 -t public public/router.php",
+        "start": "@php -S localhost:1155 -t . router.php",
         "test": "phpunit",
         "migrate": "@php runway migrate",
         "assets": "@php runway assets:publish",

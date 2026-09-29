@@ -29,7 +29,7 @@ class Installer
             $this->row('fileinfo', extension_loaded('fileinfo'), ''),
             $this->row('mbstring', extension_loaded('mbstring'), ''),
             $this->row('storage/ writable', $writable($root . '/storage'), ''),
-            $this->row('public/uploads/ writable', $writable($root . '/public/uploads'), ''),
+            $this->row('uploads/ writable', $writable($root . '/uploads'), ''),
         ];
     }
 

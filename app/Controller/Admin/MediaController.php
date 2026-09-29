@@ -71,7 +71,7 @@ class MediaController extends DashboardController
     {
         $this->forbid('upload_files');
         $item = $this->require((int) $id);
-        $root = $this->app->get('root') . '/public/uploads/';
+        $root = $this->app->get('root') . '/uploads/';
         @unlink($root . $item['path']);
         foreach ((array) $item['sizes'] as $size) {
             @unlink($root . $size['path']);
@@ -91,7 +91,7 @@ class MediaController extends DashboardController
             return 'File type is not allowed.';
         }
         $dir = gmdate('Y/m');
-        $abs = $this->app->get('root') . '/public/uploads/' . $dir;
+        $abs = $this->app->get('root') . '/uploads/' . $dir;
         if (!is_dir($abs)) {
             mkdir($abs, 0775, true);
         }

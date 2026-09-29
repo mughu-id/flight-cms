@@ -12,9 +12,9 @@
 !/storage/sessions/.gitkeep
 /storage/backups/*
 !/storage/backups/.gitkeep
-/public/uploads/*
-!/public/uploads/.htaccess
-/public/assets/vendor/
+/uploads/*
+!/uploads/.htaccess
+/assets/vendor/
 .phpunit.cache/
 .DS_Store
 Thumbs.db

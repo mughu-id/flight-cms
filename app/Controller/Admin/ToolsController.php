@@ -18,7 +18,7 @@ class ToolsController extends DashboardController
             ['label' => 'pdo_sqlite', 'ok' => extension_loaded('pdo_sqlite'), 'detail' => ''],
             ['label' => 'gd', 'ok' => extension_loaded('gd'), 'detail' => ''],
             ['label' => 'storage writable', 'ok' => is_writable($root . '/storage'), 'detail' => ''],
-            ['label' => 'uploads writable', 'ok' => is_writable($root . '/public/uploads'), 'detail' => ''],
+            ['label' => 'uploads writable', 'ok' => is_writable($root . '/uploads'), 'detail' => ''],
             ['label' => 'Pending migrations', 'ok' => $this->app->make(Migrator::class)->pending() === [], 'detail' => implode(', ', $this->app->make(Migrator::class)->pending())],
         ];
         $this->admin('admin/tools/index', [

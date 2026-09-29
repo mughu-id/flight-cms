@@ -198,7 +198,7 @@ class CmsExtension extends AbstractExtension
             return $src;
         }
         $rel = 'uploads/thumbs/' . substr(sha1($src), 0, 16) . '.jpg';
-        $file = dirname(__DIR__, 2) . '/public/' . $rel;
+        $file = dirname(__DIR__, 2) . '/' . $rel;
         if (is_file($file)) {
             return '/' . $rel;
         }
@@ -228,7 +228,7 @@ class CmsExtension extends AbstractExtension
     private function imageBytes(string $src): ?string
     {
         if (str_starts_with($src, '/')) {
-            $file = dirname(__DIR__, 2) . '/public' . $src;
+            $file = dirname(__DIR__, 2) . $src;
             return is_file($file) ? (string) file_get_contents($file) : null;
         }
         if (!preg_match('#^https?://#i', $src)) {

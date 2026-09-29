@@ -1,9 +1,13 @@
-# Sample Nginx config — set document root to /path/to/FLIGHT CMS/public
+# Sample Nginx config — document root is the project folder.
 server {
     listen 80;
     server_name example.com;
-    root /path/to/FLIGHT CMS/public;
+    root /path/to/FLIGHT CMS;
     index index.php;
+
+    location ~ ^/(app|vendor|storage|database|scripts|tests|resources|content|node_modules|deploy)/ {
+        deny all;
+    }
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
