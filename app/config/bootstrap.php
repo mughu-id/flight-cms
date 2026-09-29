@@ -33,7 +33,9 @@ $app->set('config', $config);
 $app->set('root', $root);
 $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
 $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+    || (($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+    || ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443);
 $baseUrl = $host !== ''
     ? ($https ? 'https' : 'http') . '://' . $host
     : rtrim((string) $config->get('app.url'), '/');
@@ -90,7 +92,9 @@ if ($installed) {
     // Full-page cache for anonymous GET
     $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
     $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
-    if ($method === 'GET' && !$app->session()->get('user_id') && !$app->session()->get('flash') && !str_starts_with($uri, '/admin') && !str_starts_with($uri, '/api')) {
+    $path = (string) (parse_url($uri, PHP_URL_PATH) ?: '/');
+    $cached = !in_array($path, ['/sitemap.xml', '/robots.txt', '/feed'], true) && !str_starts_with($path, '/sitemap-');
+    if ($method === 'GET' && $cached && !$app->session()->get('user_id') && !$app->session()->get('flash') && !str_starts_with($uri, '/admin') && !str_starts_with($uri, '/api')) {
         $cacheDir = $root . $ds . 'storage' . $ds . 'cache' . $ds . 'pages';
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0775, true);

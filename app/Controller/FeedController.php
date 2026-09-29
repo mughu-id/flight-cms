@@ -29,14 +29,14 @@ class FeedController
         $discourage = (bool) $this->settings->get('discourage_search', false);
         $body = $discourage
             ? "User-agent: *\nDisallow: /\n"
-            : "User-agent: *\nAllow: /\nSitemap: " . rtrim((string) $this->app->get('config')->get('app.url'), '/') . "/sitemap.xml\n";
+            : "User-agent: *\nAllow: /\nSitemap: " . $this->base() . "/sitemap.xml\n";
         $this->app->response()->header('Content-Type', 'text/plain; charset=utf-8');
         $this->app->response()->write($body);
     }
 
     public function sitemap(): void
     {
-        $base = rtrim((string) $this->app->get('config')->get('app.url'), '/');
+        $base = $this->base();
         $urls = apply_filters('sitemap.urls', [
             ['loc' => $base . '/sitemap-posts.xml'],
             ['loc' => $base . '/sitemap-pages.xml'],
@@ -53,7 +53,7 @@ class FeedController
 
     public function sitemapName(string $name): void
     {
-        $base = rtrim((string) $this->app->get('config')->get('app.url'), '/');
+        $base = $this->base();
         $urls = [];
         if ($name === 'posts' || $name === 'pages') {
             $type = $name === 'pages' ? 'page' : 'post';
@@ -79,7 +79,7 @@ class FeedController
     /** @param list<array<string, mixed>> $posts */
     private function rss(array $posts, string $title): void
     {
-        $base = rtrim((string) $this->app->get('config')->get('app.url'), '/');
+        $base = $this->base();
         $xml = '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>';
         $xml .= '<title>' . htmlspecialchars($title) . '</title><link>' . htmlspecialchars($base) . '</link>';
         foreach ($posts as $post) {
@@ -92,5 +92,10 @@ class FeedController
         $xml .= '</channel></rss>';
         $this->app->response()->header('Content-Type', 'application/rss+xml; charset=utf-8');
         $this->app->response()->write($xml);
+    }
+
+    private function base(): string
+    {
+        return rtrim((string) $this->app->get('flight.base_url'), '/');
     }
 }
