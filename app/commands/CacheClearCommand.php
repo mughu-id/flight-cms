@@ -17,10 +17,26 @@ class CacheClearCommand extends AbstractBaseCommand
     {
         $root = dirname(__DIR__, 2);
         foreach (['storage/cache/pages', 'storage/cache/twig'] as $dir) {
-            foreach (glob($root . '/' . $dir . '/*') ?: [] as $file) {
-                is_dir($file) ? null : @unlink($file);
+            $path = $root . '/' . $dir;
+            if (is_dir($path)) {
+                $this->wipe($path);
             }
         }
         $this->app()->io()->ok('Caches cleared.');
     }
+
+    private function wipe(string $dir): void
+    {
+        foreach (scandir($dir) ?: [] as $name) {
+            if ($name === '.' || $name === '..' || $name === '.gitkeep') {
+                continue;
+            }
+            $path = $dir . DIRECTORY_SEPARATOR . $name;
+            if (is_dir($path)) {
+                $this->wipe($path);
+                @rmdir($path);
+                continue;
+            }
+            @unlink($path);
+        }
 }
