@@ -161,6 +161,24 @@ class ContentController extends DashboardController
         $this->redirect('/admin/content/' . $type);
     }
 
+    public function feature(string $type, string $id): void
+    {
+        $post = $this->requirePost($type, (int) $id);
+        $this->assertCanEdit($post);
+        $mediaId = $this->app->make(\App\Service\FeaturedImage::class)->fromHtml(
+            (string) $this->app->get('root'),
+            (int) $this->app->get('capabilities')->userId(),
+            (string) $post['content']
+        );
+        if ($mediaId > 0) {
+            $this->posts()->update((int) $post['id'], ['featured_media_id' => $mediaId]);
+            $this->flash->set('success', 'Featured image set from the first image.');
+        } else {
+            $this->flash->set('error', 'No usable image found in the content.');
+        }
+        $this->redirect('/admin/content/' . $type);
+    }
+
     public function revisions(string $type, string $id): void
     {
         $post = $this->requirePost($type, (int) $id);

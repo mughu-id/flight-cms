@@ -18,7 +18,7 @@
     </div>
     {% if theme_mod('show_cats', '1') != '0' %}
     <nav class="news-cats">
-        {% for term in categories() %}
+        {% for term in categories() if term.slug != 'uncategorized' %}
             <a href="/{{ setting('category_base', 'category') }}/{{ term.slug }}">{{ term.name }}</a>
         {% endfor %}
     </nav>
@@ -112,7 +112,7 @@
     <div class="foot-col">
         <p class="foot-label">Topics</p>
         <nav>
-            {% for term in categories() %}
+            {% for term in categories() if term.slug != 'uncategorized' %}
                 <a href="/{{ setting('category_base', 'category') }}/{{ term.slug }}">{{ term.name }}</a>
             {% endfor %}
         </nav>

@@ -105,6 +105,12 @@ class ApiController
         }
         $text = trim(preg_replace('/\s+/', ' ', strip_tags($html)) ?? '');
         $excerpt = is_array($data) && !empty($data['excerpt']) ? (string) $data['excerpt'] : mb_substr($text, 0, 180);
+        $featured = $this->app->make(\App\Service\FeaturedImage::class)->fromHtml(
+            (string) $this->app->get('root'),
+            (int) $this->caps()->userId(),
+            $html,
+            is_array($data) ? trim((string) ($data['featured_image'] ?? '')) : ''
+        );
         if (!$this->can('unfiltered_html')) {
             $html = $this->app->make(HtmlSanitizer::class)->clean($html);
         }
@@ -125,33 +131,71 @@ class ApiController
             'parent_id' => 0,
             'menu_order' => 0,
             'template' => '',
-            'comment_status' => 'open',
+            'comment_status' => is_array($data) && ($data['comment_status'] ?? '') === 'closed' ? 'closed' : 'open',
             'comment_count' => 0,
+            'featured_media_id' => $featured,
             'published_at' => $status === 'publish' ? gmdate('Y-m-d H:i:s') : null,
         ]);
         $post = $this->app->make(PostRepository::class)->find($id);
         $this->app->db()->runQuery('INSERT INTO posts_fts (rowid, title, body) VALUES (?, ?, ?)', [$id, $title, $text]);
         $this->app->make(\App\Repository\FieldGroupRepository::class)->setMeta($id, '_remote', 'api');
         $this->app->make(\App\Repository\FieldGroupRepository::class)->setMeta($id, '_remote_words', str_word_count($text));
-        $category = is_array($data) ? trim((string) ($data['category'] ?? '')) : '';
-        if ($category !== '') {
-            $this->attachCategory($id, $category);
+        $meta = $this->app->make(\App\Repository\FieldGroupRepository::class);
+        if (is_array($data)) {
+            foreach (['seo_title' => '_seo_title', 'seo_description' => '_seo_description', 'seo_canonical' => '_seo_canonical', 'seo_image' => '_seo_image'] as $key => $metaKey) {
+                if (isset($data[$key]) && is_string($data[$key]) && trim($data[$key]) !== '') {
+                    $meta->setMeta($id, $metaKey, trim($data[$key]));
+                }
+            }
+            if (array_key_exists('seo_noindex', $data)) {
+                $meta->setMeta($id, '_seo_noindex', filter_var($data['seo_noindex'], FILTER_VALIDATE_BOOLEAN));
+            }
+            if (isset($data['fields']) && is_array($data['fields'])) {
+                foreach ($data['fields'] as $key => $value) {
+                    if (is_string($key) && $key !== '' && !str_starts_with($key, '_')) {
+                        $meta->setMeta($id, $key, $value);
+                    }
+                }
+            }
+            $this->attachNames($id, 'tag', $data['tags'] ?? []);
+            $categories = $data['categories'] ?? [];
+            if (is_string($categories)) {
+                $categories = explode(',', $categories);
+            }
+            if (trim((string) ($data['category'] ?? '')) !== '') {
+                $categories = array_merge([(string) $data['category']], (array) $categories);
+            }
+            $this->attachNames($id, 'category', $categories);
         }
         $this->app->get('hooks')->doAction('post.saved', $post);
         $this->ok($this->serializePost($post), ['url' => '/' . $slug], 201);
     }
 
-    private function attachCategory(int $postId, string $name): void
+    /** @param list<mixed>|string $names */
+    private function attachNames(int $postId, string $taxonomy, array|string $names): void
     {
+        if (is_string($names)) {
+            $names = explode(',', $names);
+        }
         $terms = $this->app->make(TermRepository::class);
-        $slug = $this->app->make(Slugger::class)->slug($name);
-        $term = $terms->findBySlug('category', $slug);
-        $termId = $term !== null ? (int) $term['id'] : $terms->create([
-            'taxonomy' => 'category',
-            'name' => $name,
-            'slug' => $slug,
-        ]);
-        $terms->sync($postId, 'category', [$termId]);
+        $slugger = $this->app->make(Slugger::class);
+        $ids = [];
+        foreach ($names as $name) {
+            $name = trim((string) $name);
+            if ($name === '') {
+                continue;
+            }
+            $slug = $slugger->slug($name);
+            $term = $terms->findBySlug($taxonomy, $slug);
+            $ids[] = $term !== null ? (int) $term['id'] : $terms->create([
+                'taxonomy' => $taxonomy,
+                'name' => $name,
+                'slug' => $slug,
+            ]);
+        }
+        if ($ids !== []) {
+            $terms->sync($postId, $taxonomy, $ids);
+        }
     }
 
     public function contentCreate(string $type): void

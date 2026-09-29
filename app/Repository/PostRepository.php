@@ -28,8 +28,9 @@ class PostRepository
         $dir = ($filters['order'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
         $offset = max(0, ($page - 1) * $perPage);
         $rows = Row::all($this->db->fetchAll(
-            "SELECT p.*, u.display_name AS author_name FROM posts p
+            "SELECT p.*, u.display_name AS author_name, m.path AS featured_path FROM posts p
              LEFT JOIN users u ON u.id = p.author_id
+             LEFT JOIN media m ON m.id = p.featured_media_id
              WHERE {$where} ORDER BY p.{$order} {$dir} LIMIT {$perPage} OFFSET {$offset}",
             $params
         ));

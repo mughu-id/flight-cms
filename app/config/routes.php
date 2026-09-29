@@ -87,6 +87,7 @@ $router->group('', static function (Router $router) use ($app): void {
         $router->get('/content/@type/new', [ContentController::class, 'create']);
         $router->post('/content/@type', [ContentController::class, 'store']);
         $router->post('/content/@type/bulk', [ContentController::class, 'bulk']);
+        $router->post('/content/@type/@id:[0-9]+/feature', [ContentController::class, 'feature']);
         $router->get('/content/@type/@id:[0-9]+', [ContentController::class, 'edit']);
         $router->post('/content/@type/@id:[0-9]+', [ContentController::class, 'update']);
         $router->post('/content/@type/@id:[0-9]+/autosave', [ContentController::class, 'autosave']);

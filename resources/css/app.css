@@ -658,6 +658,9 @@
     min-width: 0;
 }
 .admin main #selected-count { color: var(--color-muted-foreground); font-size: 0.75rem; }
+.admin main td.feature { width: 1%; white-space: nowrap; }
+.admin main td.feature img { display: block; width: 2.75rem; height: 2.75rem; border-radius: 0.45rem; object-fit: cover; background: var(--color-muted); }
+.admin main td.feature form { margin: 0; }
 .admin main td.actions {
     width: 1%;
     white-space: nowrap;
