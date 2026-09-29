@@ -1,0 +1,11 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<form class="sheet" method="post" action="/admin/settings/media">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <p class="hint">These sizes are created automatically each time you upload an image. Thumbnail is cropped square. Medium and large keep the original shape.</p>
+    <label class="field">Thumbnail width<input type="number" name="thumb" min="50" value="{{ settings.image_sizes.thumbnail.0|default(150) }}"></label>
+    <label class="field">Medium width<input type="number" name="medium" min="100" value="{{ settings.image_sizes.medium.0|default(300) }}"></label>
+    <label class="field">Large width<input type="number" name="large" min="200" value="{{ settings.image_sizes.large.0|default(1024) }}"></label>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

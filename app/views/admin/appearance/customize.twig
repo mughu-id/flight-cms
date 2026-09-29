@@ -1,0 +1,51 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<form class="customizer" method="post" action="/admin/appearance/customize">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {% for key, fields in groups %}
+        <section class="panel">
+            <header>{{ group_labels[key]|default(key|capitalize) }}</header>
+            <div class="custom-body">
+                {% for field in fields %}
+                    {% set value = mods[field.key]|default(field.default|default('')) %}
+                    {% if field.type == 'color' %}
+                        <label class="color-line">{{ field.label }}
+                            <input type="color" name="{{ field.key }}" value="{{ value }}">
+                            <input class="hex" value="{{ value }}" maxlength="7" spellcheck="false">
+                        </label>
+                    {% elseif field.type == 'check' %}
+                        <label class="switch"><input type="checkbox" name="{{ field.key }}" value="1" {{ value != '0' ? 'checked' : '' }}><span>{{ field.label }}</span></label>
+                    {% elseif field.type == 'select' %}
+                        <label class="field">{{ field.label }}
+                            <select name="{{ field.key }}">
+                                {% for option, name in field.options %}
+                                    <option value="{{ option }}" {{ value == option ? 'selected' : '' }}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    {% elseif field.type == 'textarea' %}
+                        <label class="field">{{ field.label }}
+                            <textarea name="{{ field.key }}" rows="3" placeholder="Leave empty to use the site tagline">{{ value }}</textarea>
+                        </label>
+                    {% else %}
+                        <label class="field">{{ field.label }}
+                            <input name="{{ field.key }}" value="{{ value }}">
+                        </label>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endfor %}
+    <button type="submit">Save</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}">
+document.querySelectorAll('.color-line').forEach(line => {
+    const color = line.querySelector('input[type="color"]');
+    const hex = line.querySelector('.hex');
+    color.addEventListener('input', () => { hex.value = color.value; });
+    hex.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) color.value = hex.value; });
+});
+</script>
+{% endblock %}

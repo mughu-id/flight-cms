@@ -1,0 +1,15 @@
+{% extends '@theme/layout.twig' %}
+{% block content %}
+<header class="search-head">
+    <span class="search-label">Search</span>
+    <h1>{{ query ?: 'Find a story' }}</h1>
+    {% if query %}<p>{{ posts|length }} {{ posts|length == 1 ? 'story' : 'stories' }}</p>{% endif %}
+</header>
+{% if posts %}
+<div class="feed">
+    {% include '@theme/feed-items.twig' %}
+</div>
+{% else %}
+<p class="empty">{{ query ? 'No matching stories.' : 'Type a word to search.' }}</p>
+{% endif %}
+{% endblock %}

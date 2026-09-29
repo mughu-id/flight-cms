@@ -1,0 +1,22 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<form class="sheet" method="post" action="/admin/settings/reading">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field">Homepage displays
+        <select name="show_on_front">
+            <option value="posts" {{ settings.show_on_front == 'posts' ? 'selected' : '' }}>Latest posts</option>
+            <option value="page" {{ settings.show_on_front == 'page' ? 'selected' : '' }}>A static page</option>
+        </select>
+    </label>
+    <label class="field">Front page ID<input name="page_on_front" value="{{ settings.page_on_front|default(0) }}"></label>
+    <label class="field">Posts per page<input name="posts_per_page" value="{{ settings.posts_per_page|default(10) }}"></label>
+    <label class="field">Pagination
+        <select name="pagination_mode">
+            <option value="numbers" {{ settings.pagination_mode|default('numbers') == 'numbers' ? 'selected' : '' }}>Numbered pages</option>
+            <option value="more" {{ settings.pagination_mode == 'more' ? 'selected' : '' }}>Load more button</option>
+            <option value="infinite" {{ settings.pagination_mode == 'infinite' ? 'selected' : '' }}>Infinite scroll</option>
+        </select>
+    </label>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

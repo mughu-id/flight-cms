@@ -1,0 +1,80 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>Sidebar</h1>
+        <p class="board-count">Drag to reorder. Add the widgets you want on the public site.</p>
+    </div>
+</div>
+<form class="customizer" method="post" action="/admin/appearance/sidebar" id="sidebar-form">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="widgets_json" id="widgets_json">
+    <section class="panel">
+        <header>Shown</header>
+        <ul class="widget-list" id="shown"></ul>
+        <p class="menu-empty" id="shown-empty">Nothing here yet.</p>
+    </section>
+    <section class="panel">
+        <header>Available</header>
+        <ul class="widget-list" id="available"></ul>
+        <p class="menu-empty" id="available-empty">All widgets are in use.</p>
+    </section>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}">
+const names = {{ widgets|json_encode|raw }};
+const enabled = {{ enabled|json_encode|raw }};
+const shown = document.getElementById('shown');
+const available = document.getElementById('available');
+
+function row(key) {
+    const li = document.createElement('li');
+    li.className = 'widget-row';
+    li.draggable = true;
+    li.dataset.key = key;
+    li.innerHTML = '<span class="grip">⋮⋮</span><b></b><button type="button" class="icon-btn border-input move" aria-label="Move">↔</button>';
+    li.querySelector('b').textContent = names[key];
+    return li;
+}
+enabled.forEach(key => { if (names[key]) shown.appendChild(row(key)); });
+Object.keys(names).forEach(key => { if (!enabled.includes(key)) available.appendChild(row(key)); });
+
+function refresh() {
+    document.getElementById('shown-empty').hidden = shown.children.length > 0;
+    document.getElementById('available-empty').hidden = available.children.length > 0;
+}
+refresh();
+
+document.querySelectorAll('.widget-list').forEach(list => {
+    list.addEventListener('dragstart', e => {
+        const li = e.target.closest('.widget-row');
+        if (!li) return;
+        e.dataTransfer.setData('text/plain', li.dataset.key);
+        li.classList.add('is-drag');
+    });
+    list.addEventListener('dragover', e => { e.preventDefault(); });
+    list.addEventListener('drop', e => {
+        e.preventDefault();
+        const key = e.dataTransfer.getData('text/plain');
+        const li = document.querySelector('.widget-row[data-key="' + key + '"]');
+        const over = e.target.closest('.widget-row');
+        if (!li) return;
+        list.insertBefore(li, over && over !== li && e.clientY > over.getBoundingClientRect().top + over.offsetHeight / 2 ? over.nextSibling : over);
+        refresh();
+    });
+    list.addEventListener('dragend', () => document.querySelectorAll('.is-drag').forEach(el => el.classList.remove('is-drag')));
+    list.addEventListener('click', e => {
+        const btn = e.target.closest('.move');
+        if (!btn) return;
+        const li = btn.closest('.widget-row');
+        (li.parentElement === shown ? available : shown).appendChild(li);
+        refresh();
+    });
+});
+document.getElementById('sidebar-form').addEventListener('submit', () => {
+    document.getElementById('widgets_json').value = JSON.stringify([...shown.children].map(li => li.dataset.key));
+});
+</script>
+{% endblock %}

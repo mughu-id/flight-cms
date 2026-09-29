@@ -1,0 +1,33 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>Log</h1>
+        <p class="board-count">{{ log_enabled ? 'On. Errors, warnings, slow PHP, and app messages are written to cms.log.' : 'Off. Nothing is written until you enable it.' }}</p>
+    </div>
+</div>
+<section class="panel log-panel">
+    <header>Enable</header>
+    <form class="board-filters" method="post" action="/admin/tools/logging">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label class="switch"><input type="checkbox" name="log_enabled" value="1" {{ log_enabled ? 'checked' : '' }}><span>Enable logging</span></label>
+        <input name="log_slow_ms" value="{{ log_slow_ms }}" inputmode="numeric">
+        <span class="muted">ms = slow PHP warning</span>
+        <button type="submit">Save</button>
+    </form>
+</section>
+<section class="panel log-panel">
+    <header>Entries</header>
+    <form class="board-filters" method="get" action="/admin/tools/log">
+        <select name="filter" onchange="this.form.submit()">
+            {% for key, label in {all: 'Show all', error: 'Errors only', warning: 'Warnings only', info: 'Info only', debug: 'Debug only'} %}
+                <option value="{{ key }}" {{ log_filter == key ? 'selected' : '' }}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    <pre class="log-view">{{ log_text ?: (log_enabled ? 'Nothing logged yet. Trigger an error or wait for a slow request.' : 'Enable logging above, then save.') }}</pre>
+    {% if log_text %}
+    <form method="post" action="/admin/tools/logging/clear"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="border-input" type="submit">Clear log</button></form>
+    {% endif %}
+</section>
+{% endblock %}

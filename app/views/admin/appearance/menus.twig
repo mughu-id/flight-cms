@@ -1,0 +1,148 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>Menus</h1>
+        <p class="board-count">{{ menus|length }} {{ menus|length == 1 ? 'menu' : 'menus' }}</p>
+    </div>
+</div>
+<div class="menu-layout">
+    <aside class="panel">
+        <header>Your menus</header>
+        <ul class="menu-list">
+            {% for m in menus %}
+                <li><a class="{{ nav and nav.id == m.id ? 'is-on' : '' }}" href="/admin/appearance/menus?id={{ m.id }}">{{ m.name }}</a></li>
+            {% else %}
+                <li class="muted">No menus yet.</li>
+            {% endfor %}
+        </ul>
+        <form class="menu-new" method="post" action="/admin/appearance/menus">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input name="name" placeholder="New menu name" required>
+            <button type="submit">Add</button>
+        </form>
+    </aside>
+    {% if nav %}
+    <section class="panel">
+        <header>{{ nav.name }}</header>
+        <form class="menu-editor" method="post" action="/admin/appearance/menus/{{ nav.id }}" id="menu-form">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input type="hidden" name="items_json" id="items_json">
+            <div class="menu-meta">
+                <label>Name<input name="name" value="{{ nav.name }}" required></label>
+                <label>Show in
+                    <select name="location">
+                        <option value="">Not assigned</option>
+                        {% for key, label in locations %}
+                            <option value="{{ key }}" {{ nav.location == key ? 'selected' : '' }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="menu-add">
+                <select id="add-page">
+                    <option value="">Add a page…</option>
+                    {% for page in pages %}<option value="{{ page.id }}" data-url="{{ page.path }}" data-title="{{ page.title }}">{{ page.title }}</option>{% endfor %}
+                </select>
+                <input id="link-label" placeholder="Custom label">
+                <input id="link-url" placeholder="https:// or /path">
+                <button type="button" class="border-input" id="add-link">Add link</button>
+            </div>
+            <ul class="menu-tree" id="menu-items"></ul>
+            <p class="menu-empty" id="menu-empty" hidden>Nothing in this menu yet. Add a page or a link.</p>
+            <div class="menu-bar">
+                <button type="submit">Save menu</button>
+                <button class="destructive" type="submit" formaction="/admin/appearance/menus/{{ nav.id }}/delete" onclick="return confirm('Delete this menu?')">Delete</button>
+            </div>
+        </form>
+    </section>
+    {% else %}
+    <section class="panel">
+        <p class="menu-empty">Create a menu to start adding links.</p>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+{% if nav %}
+<script nonce="{{ nonce }}">
+const seed = {{ items|json_encode|raw }};
+const list = document.getElementById('menu-items');
+const field = document.getElementById('items_json');
+const empty = document.getElementById('menu-empty');
+
+function row(item) {
+    const li = document.createElement('li');
+    li.className = 'menu-node';
+    li.dataset.item = JSON.stringify({title: item.title || '', type: item.type || 'custom', object_id: Number(item.object_id || 0), url: item.url || '', target: item.target || '', css_class: item.css_class || ''});
+    li.innerHTML = '<span class="grip" draggable="true" title="Drag">⋮⋮</span><input class="label" value=""><span class="url"></span><button type="button" class="icon-btn destructive remove" title="Remove" aria-label="Remove">×</button><ul class="menu-tree"></ul>';
+    li.querySelector('.label').value = item.title || '';
+    const url = li.querySelector('.url');
+    url.textContent = item.url || (item.type === 'post' ? 'Page' : 'Custom');
+    const kids = li.querySelector(':scope > ul');
+    (item.children || []).forEach(child => kids.appendChild(row(child)));
+    return li;
+}
+seed.forEach(item => list.appendChild(row(item)));
+
+function nodes(ul) {
+    return [...ul.children].filter(el => el.classList.contains('menu-node')).map(li => {
+        const data = JSON.parse(li.dataset.item);
+        data.title = li.querySelector('.label').value.trim() || data.title;
+        data.children = nodes(li.querySelector(':scope > ul'));
+        return data;
+    });
+}
+function sync() {
+    field.value = JSON.stringify(nodes(list));
+    empty.hidden = list.children.length > 0;
+}
+sync();
+
+function add(item) {
+    list.appendChild(row(item));
+    sync();
+}
+document.getElementById('add-page').addEventListener('change', e => {
+    const opt = e.target.selectedOptions[0];
+    if (!opt.value) return;
+    add({title: opt.dataset.title, type: 'post', object_id: Number(opt.value), url: opt.dataset.url, children: []});
+    e.target.value = '';
+});
+document.getElementById('add-link').addEventListener('click', () => {
+    const label = document.getElementById('link-label');
+    const url = document.getElementById('link-url');
+    if (!label.value.trim() || !url.value.trim()) return;
+    add({title: label.value.trim(), type: 'custom', object_id: 0, url: url.value.trim(), children: []});
+    label.value = '';
+    url.value = '';
+});
+list.addEventListener('input', e => { if (e.target.classList.contains('label')) sync(); });
+list.addEventListener('click', e => {
+    const btn = e.target.closest('.remove');
+    if (!btn) return;
+    btn.closest('.menu-node').remove();
+    sync();
+});
+
+let dragged = null;
+list.addEventListener('dragstart', e => {
+    const grip = e.target.closest('.grip');
+    if (!grip) { e.preventDefault(); return; }
+    dragged = grip.closest('.menu-node');
+    e.dataTransfer.effectAllowed = 'move';
+});
+list.addEventListener('dragover', e => {
+    const li = e.target.closest('.menu-node');
+    if (!dragged || !li || li === dragged || dragged.contains(li)) return;
+    e.preventDefault();
+    const nest = e.offsetX > li.getBoundingClientRect().width * 0.55;
+    const ul = nest ? li.querySelector(':scope > ul') : li.parentElement;
+    const after = e.clientY > li.getBoundingClientRect().top + li.getBoundingClientRect().height / 2;
+    ul.insertBefore(dragged, nest ? (after ? null : ul.firstChild) : (after ? li.nextSibling : li));
+});
+list.addEventListener('dragend', () => { dragged = null; sync(); });
+document.getElementById('menu-form').addEventListener('submit', sync);
+</script>
+{% endif %}
+{% endblock %}

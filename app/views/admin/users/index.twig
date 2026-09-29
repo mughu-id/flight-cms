@@ -1,0 +1,22 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <h1>Users</h1>
+    {% if can.can('create_users') %}<a class="bg-primary" href="/admin/users/new">Add user</a>{% endif %}
+</div>
+<form class="toolbar" method="get"><input name="q" value="{{ q }}" placeholder="Search"></form>
+<table class="w-full text-left text-sm">
+    <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th></th></tr></thead>
+    <tbody>
+    {% for user in users %}
+        <tr>
+            <td>{{ user.display_name }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td class="actions">{% if can.can('edit_users') %}<a class="icon-btn border-input" href="/admin/users/{{ user.id }}" title="Edit" aria-label="Edit">{{ icon('pencil') }}</a>{% endif %}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

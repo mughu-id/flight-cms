@@ -1,0 +1,12 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<form class="sheet" method="post" action="/admin/settings/seo">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field">Title separator<input name="title_separator" value="{{ settings.title_separator|default('-') }}"></label>
+    <label class="field">Home title<input name="seo_home_title" value="{{ settings.seo_home_title|default('') }}"></label>
+    <label class="field">Home description<textarea name="seo_home_description">{{ settings.seo_home_description|default('') }}</textarea></label>
+    <label class="field">Default social image URL<input name="seo_default_image" value="{{ settings.seo_default_image|default('') }}"></label>
+    <label class="check"><input type="checkbox" name="discourage_search" value="1" {{ settings.discourage_search ? 'checked' : '' }}> Discourage search engines</label>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

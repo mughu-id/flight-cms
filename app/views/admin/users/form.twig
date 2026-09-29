@@ -1,0 +1,27 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-3">{{ user ? 'Edit user' : 'Add user' }}</h1>
+<form method="post" action="{{ user ? '/admin/users/' ~ user.id : '/admin/users' }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="mb-3"><label class="mb-1.5 block text-sm font-medium">Username</label><input class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30" name="username" value="{{ user.username|default('') }}" required></div>
+    <div class="mb-3"><label class="mb-1.5 block text-sm font-medium">Email</label><input class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30" type="email" name="email" value="{{ user.email|default('') }}" required></div>
+    <div class="mb-3"><label class="mb-1.5 block text-sm font-medium">Display name</label><input class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30" name="display_name" value="{{ user.display_name|default('') }}" required></div>
+    <div class="mb-3"><label class="mb-1.5 block text-sm font-medium">Bio</label><textarea class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30" name="bio">{{ user.bio|default('') }}</textarea></div>
+    <div class="mb-3"><label class="mb-1.5 block text-sm font-medium">Role</label>
+        <select class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30" name="role">{% for key, label in roles %}<option value="{{ key }}" {{ user and user.role == key ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>
+    </div>
+    <div class="mb-3"><label class="mb-1.5 block text-sm font-medium">Status</label>
+        <select class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30" name="status"><option value="active">Active</option><option value="disabled" {{ user and user.status == 'disabled' ? 'selected' : '' }}>Disabled</option></select>
+    </div>
+    <div class="mb-3"><label class="mb-1.5 block text-sm font-medium">Password {{ user ? '(leave blank to keep)' : '' }}</label><input class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30" type="password" name="password" {{ user ? '' : 'required' }}></div>
+    <button class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs hover:bg-primary/90">Save</button>
+</form>
+{% if user and can.can('delete_users') and user.id != current_user.id %}
+<form method="post" action="/admin/users/{{ user.id }}/delete" class="mt-4" onsubmit="return confirm('Delete this user?')">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="mb-1.5 block text-sm font-medium">Reassign content to user id</label>
+    <input class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30 mb-2" name="reassign" required>
+    <button class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium bg-red-600 text-white hover:bg-red-700">Delete user</button>
+</form>
+{% endif %}
+{% endblock %}

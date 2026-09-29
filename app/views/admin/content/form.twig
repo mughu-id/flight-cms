@@ -1,0 +1,129 @@
+{% extends 'admin/layout.twig' %}
+{% block head %}
+<script src="/assets/vendor/tinymce/tinymce.min.js" nonce="{{ nonce }}"></script>
+{% endblock %}
+{% block content %}
+{% if autosave is defined and autosave %}
+    <div class="mb-4 rounded-md px-4 py-3 text-sm border border-border bg-background">A newer autosave exists from {{ autosave.created_at }}. <a href="/admin/content/{{ type.slug }}/{{ post.id }}/revisions">Compare revisions</a></div>
+{% endif %}
+<form method="post" action="{{ post ? '/admin/content/' ~ type.slug ~ '/' ~ post.id : '/admin/content/' ~ type.slug }}" id="editor-form">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 lg:col-span-8">
+            <div class="mb-3"><input class="editor-title" name="title" value="{{ post.title|default('') }}" placeholder="Title" required></div>
+            <div class="mb-3"><label class="mb-1.5 block text-sm font-medium">Slug</label><input name="slug" value="{{ post.slug|default('') }}" placeholder="auto from title"></div>
+            <textarea id="content" name="content">{{ post.content|default('') }}</textarea>
+            <p class="editor-status" id="save-state"></p>
+            <details class="panel">
+                <summary>Excerpt</summary>
+                <textarea name="excerpt" rows="3" placeholder="Short summary for listings and search">{{ post.excerpt|default('') }}</textarea>
+            </details>
+        </div>
+        <div class="editor-side col-span-12 lg:col-span-4">
+            <div class="rounded-xl border border-border bg-card text-card-foreground shadow-sm mb-3"><div class="p-4">
+                <p class="mb-1.5 text-sm font-medium">Status</p>
+                <div class="seg mb-3">
+                    {% for status, label in {draft: 'Draft', pending: 'Review', publish: 'Published', private: 'Private'} %}
+                        <label><input type="radio" name="status" value="{{ status }}" {{ (post.status|default('draft')) == status ? 'checked' : '' }}>{{ label }}</label>
+                    {% endfor %}
+                </div>
+                <label class="mb-1.5 block text-sm font-medium">Publish date</label>
+                <div class="mb-3"><input type="datetime-local" name="published_at" value="{{ post and post.published_at ? post.published_at|replace({' ': 'T'})|slice(0, 16) : '' }}"></div>
+                <label class="switch mb-3">
+                    <input type="hidden" name="comment_status" value="closed">
+                    <input type="checkbox" name="comment_status" value="open" {{ not post or post.comment_status != 'closed' ? 'checked' : '' }}>
+                    <span>Allow comments</span>
+                </label>
+                <div class="editor-actions">
+                    <button id="save-btn">Save</button>
+                    {% if post %}<a class="border-input" href="/preview/{{ post.id }}" target="_blank">Preview</a>{% endif %}
+                </div>
+            </div></div>
+            {% if 'page-attributes' in type.supports %}
+            <details class="panel">
+                <summary>Page</summary>
+                <label class="mb-1.5 block text-sm font-medium">Parent</label>
+                <select class="mb-2" name="parent_id">
+                    <option value="0">(none)</option>
+                    {% for page in pages %}<option value="{{ page.id }}" {{ post and post.parent_id == page.id ? 'selected' : '' }}>{{ page.title }}</option>{% endfor %}
+                </select>
+                <label class="mb-1.5 block text-sm font-medium">Order</label>
+                <input class="mb-2" name="menu_order" value="{{ post.menu_order|default(0) }}">
+                <label class="mb-1.5 block text-sm font-medium">Template</label>
+                <input name="template" value="{{ post.template|default('') }}" placeholder="full-width">
+            </details>
+            {% endif %}
+            {% for slug, box in taxonomies %}
+            <details class="panel" {{ box.selected ? 'open' : '' }}>
+                <summary>{{ box.def.label }} <span>{{ box.selected|length }}</span></summary>
+                {% if box.def.hierarchical %}
+                    <div class="checks">
+                        {% for term in box.terms %}
+                            <label><input type="checkbox" name="terms_{{ slug }}[]" value="{{ term.id }}" {{ term.id in box.selected ? 'checked' : '' }}>{{ term.name }}</label>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <input name="terms_{{ slug }}" placeholder="tag one, tag two" value="{% for term in box.terms %}{% if term.id in box.selected %}{{ term.name }}, {% endif %}{% endfor %}">
+                {% endif %}
+            </details>
+            {% endfor %}
+            {% for group in field_groups|default([]) %}
+            <details class="panel">
+                <summary>{{ group.title }}</summary>
+                {% for field in group.fields %}
+                    <label class="mb-1.5 block text-sm font-medium">{{ field.label }}</label>
+                    <input class="mb-2" name="fields[{{ field.key }}]" value="{{ meta[field.key]|default(field.default|default('')) }}">
+                {% endfor %}
+            </details>
+            {% endfor %}
+            <details class="panel">
+                <summary>SEO</summary>
+                <input class="mb-2" name="seo_title" placeholder="SEO title" value="{{ meta._seo_title|default('') }}">
+                <textarea class="mb-2" name="seo_description" rows="3" placeholder="SEO description">{{ meta._seo_description|default('') }}</textarea>
+                <input class="mb-2" name="seo_canonical" placeholder="Canonical URL" value="{{ meta._seo_canonical|default('') }}">
+                <input class="mb-2" name="seo_image" placeholder="Social image URL" value="{{ meta._seo_image|default('') }}">
+                <label class="switch"><input type="checkbox" name="seo_noindex" value="1" {{ meta._seo_noindex ? 'checked' : '' }}><span>Hide from search engines</span></label>
+            </details>
+            {% if post %}<a class="panel-link" href="/admin/content/{{ type.slug }}/{{ post.id }}/revisions">Revisions</a>{% endif %}
+        </div>
+    </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}">
+tinymce.init({
+    selector: '#content',
+    license_key: 'gpl',
+    menubar: false,
+    plugins: 'link lists image code autoresize table wordcount fullscreen autolink advlist',
+    toolbar: 'blocks | bold italic | bullist numlist | link image table | blockquote | code fullscreen',
+    block_formats: 'Paragraph=p; Heading 2=h2; Heading 3=h3; Heading 4=h4',
+    min_height: 480,
+    max_height: 1600,
+    content_style: 'body{font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.65}img,table{max-width:100%}table{width:100%;border-collapse:collapse}td,th{border:1px solid #e7e5e4;padding:.35rem .5rem;vertical-align:top}',
+    setup: (editor) => editor.on('init', () => editor.getWin().scrollTo(0, 0))
+});
+const form = document.getElementById('editor-form');
+const state = document.getElementById('save-state');
+const saveBtn = document.getElementById('save-btn');
+const syncSave = () => { const picked = form.querySelector('input[name="status"]:checked'); saveBtn.textContent = picked && picked.value === 'publish' ? 'Publish' : 'Save'; };
+form.querySelectorAll('input[name="status"]').forEach((radio) => radio.addEventListener('change', syncSave));
+syncSave();
+form.addEventListener('submit', () => { if (typeof tinymce !== 'undefined') tinymce.triggerSave(); });
+setInterval(() => {
+    if (typeof tinymce !== 'undefined') tinymce.triggerSave();
+    state.textContent = 'Saving…';
+    const data = new FormData(form);
+    fetch('/admin/content/{{ type.slug }}/{{ post.id|default(0) }}/autosave', {
+        method: 'POST',
+        headers: {'X-CSRF-Token': '{{ csrf }}'},
+        body: new URLSearchParams(data)
+    }).then(r => r.json()).then(json => {
+        if (json.id && !form.action.endsWith('/' + json.id)) {
+            form.action = '/admin/content/{{ type.slug }}/' + json.id;
+        }
+        state.textContent = 'Saved';
+    }).catch(() => { state.textContent = 'Not saved'; });
+}, 60000);
+</script>
+{% endblock %}

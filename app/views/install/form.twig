@@ -1,0 +1,51 @@
+{% extends 'layout.twig' %}
+{% block body_class %}bg-light{% endblock %}
+{% block body %}
+<div class="mx-auto max-w-5xl px-4 py-10" style="max-width: 640px">
+    <h1 class="text-2xl font-semibold mb-4">Install Flight CMS</h1>
+    {% if errors is defined %}
+        <div class="mb-4 rounded-md px-4 py-3 text-sm bg-red-50 text-red-800">{% for error in errors %}<div>{{ error }}</div>{% endfor %}</div>
+    {% endif %}
+    <div class="rounded-lg border border-slate-200 bg-white shadow-sm mb-4">
+        <div class="p-4">
+            <h2 class="text-sm font-semibold">Requirements</h2>
+            <ul class="list-none p-0 mb-0">
+                {% for check in checks %}
+                    <li class="{{ check.ok ? 'text-success' : 'text-danger' }}">
+                        {{ icon(check.ok ? 'check' : 'x') }}
+                        {{ check.label }} {{ check.detail }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% if ready %}
+    <form method="post" action="/install" class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="p-4">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-slate-700">Site title</label>
+                <input class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" name="site_title" required>
+            </div>
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-slate-700">Username</label>
+                <input class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" name="username" required pattern="[a-z0-9_]{3,30}">
+            </div>
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
+                <input class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" type="email" name="email" required>
+            </div>
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-slate-700">Display name</label>
+                <input class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" name="display_name">
+            </div>
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-slate-700">Password</label>
+                <input class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" type="password" name="password" required minlength="8">
+            </div>
+            <button class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium bg-slate-900 text-white hover:bg-slate-700">Install</button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

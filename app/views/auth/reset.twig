@@ -1,0 +1,9 @@
+{% extends 'auth/layout.twig' %}
+{% set heading = 'Reset password' %}
+{% block form %}
+<form method="post" action="/admin/reset-password/{{ token }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="mb-3"><label class="mb-1 block text-sm font-medium text-slate-700">New password</label><input class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" type="password" name="password" required minlength="8"></div>
+    <button class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium bg-slate-900 text-white hover:bg-slate-700">Save password</button>
+</form>
+{% endblock %}

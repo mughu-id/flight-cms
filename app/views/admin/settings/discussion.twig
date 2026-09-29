@@ -1,0 +1,12 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<form class="sheet" method="post" action="/admin/settings/discussion">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="check"><input type="checkbox" name="comments_open" value="1" {{ settings.comments_open ? 'checked' : '' }}> Allow comments on new posts</label>
+    <label class="check"><input type="checkbox" name="comment_moderation" value="1" {{ settings.comment_moderation ? 'checked' : '' }}> Hold comments for moderation</label>
+    <label class="field">Max links<input name="comment_max_links" value="{{ settings.comment_max_links|default(2) }}"></label>
+    <label class="field">Disallowed words<textarea name="comment_disallowed" rows="4">{{ settings.comment_disallowed|default('') }}</textarea></label>
+    <label class="field">Thread depth<input name="thread_depth" value="{{ settings.thread_depth|default(5) }}"></label>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

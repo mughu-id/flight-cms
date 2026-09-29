@@ -1,0 +1,29 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>{{ group ? 'Edit' : 'Add' }} field group</h1>
+        <p class="board-count">Fields as JSON. Each item needs key, label, and type.</p>
+    </div>
+</div>
+<form class="sheet" method="post" action="{{ group ? '/admin/field-groups/' ~ group.id : '/admin/field-groups' }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field">Title<input name="title" value="{{ group.title|default('') }}" required></label>
+    <fieldset class="field">
+        <legend>Show on</legend>
+        <div class="pick-row">
+            <label class="check"><input type="checkbox" name="post_types[]" value="post" {{ group and 'post' in group.post_types ? 'checked' : '' }}> Posts</label>
+            <label class="check"><input type="checkbox" name="post_types[]" value="page" {{ group and 'page' in group.post_types ? 'checked' : '' }}> Pages</label>
+        </div>
+    </fieldset>
+    <label class="field">Fields JSON<textarea name="fields_json" rows="10">{{ group ? group.fields|json_encode(constant('JSON_PRETTY_PRINT')) : '[{"key":"price","label":"Price","type":"text","required":false}]' }}</textarea></label>
+    <label class="check"><input type="checkbox" name="active" value="1" {{ not group or group.active ? 'checked' : '' }}> Active</label>
+    <button type="submit">Save</button>
+</form>
+{% if group %}
+<form method="post" action="/admin/field-groups/{{ group.id }}/delete" class="sheet" onsubmit="return confirm('Delete this field group?')">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="border-input" type="submit">Delete field group</button>
+</form>
+{% endif %}
+{% endblock %}

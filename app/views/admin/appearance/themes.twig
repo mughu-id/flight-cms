@@ -1,0 +1,28 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>Themes</h1>
+        <p class="board-count">{{ themes|length }} {{ themes|length == 1 ? 'theme' : 'themes' }}</p>
+    </div>
+</div>
+<div class="theme-grid">
+    {% for slug, theme in themes %}
+        <article class="theme-card {{ slug == active ? 'is-active' : '' }}">
+            <div class="theme-preview" style="--swatch: {{ theme.settings.0.default|default('#18181b') }}">{{ theme.name|first|upper }}</div>
+            <div class="theme-body">
+                <strong>{{ theme.name }}</strong>
+                <span>v{{ theme.version }}</span>
+                {% if slug == active %}
+                    <span class="pill pill-publish">Active</span>
+                {% else %}
+                    <form method="post" action="/admin/appearance/themes/{{ slug }}/activate">
+                        <input type="hidden" name="csrf" value="{{ csrf }}">
+                        <button type="submit">Activate</button>
+                    </form>
+                {% endif %}
+            </div>
+        </article>
+    {% endfor %}
+</div>
+{% endblock %}

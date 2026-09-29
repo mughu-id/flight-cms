@@ -1,0 +1,16 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<form class="sheet" method="post" action="/admin/settings/permalinks">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field">Post permalink
+        <select name="permalink_structure">
+            <option value="post" {{ settings.permalink_structure == 'post' ? 'selected' : '' }}>/post-name</option>
+            <option value="day" {{ settings.permalink_structure == 'day' ? 'selected' : '' }}>/yyyy/mm/dd/post-name</option>
+            <option value="month" {{ settings.permalink_structure == 'month' ? 'selected' : '' }}>/yyyy/mm/post-name</option>
+        </select>
+    </label>
+    <label class="field">Category base<input name="category_base" value="{{ settings.category_base|default('category') }}"></label>
+    <label class="field">Tag base<input name="tag_base" value="{{ settings.tag_base|default('tag') }}"></label>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

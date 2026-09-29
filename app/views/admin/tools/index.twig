@@ -1,0 +1,29 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar"><h1>Tools</h1></div>
+<div class="dash-grid">
+    <section class="panel">
+        <header>Site health</header>
+        <ul class="rows">
+            {% for item in health %}
+                <li>
+                    <span class="swatch {{ item.ok ? 'ok' : 'bad' }}"></span>
+                    {{ item.label }}
+                    {% if item.detail %}<span class="text-muted-foreground">{{ item.detail }}</span>{% endif %}
+                    <span class="badge">{{ item.ok ? 'OK' : 'Fail' }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+    <section class="panel">
+        <header>Maintenance</header>
+        <div class="term-add-body">
+            <p class="board-count">{{ maintenance ? 'Maintenance mode is on. Visitors see a holding page.' : 'The site is live.' }}</p>
+            <form method="post" action="/admin/tools/backup"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="border-input" type="submit">Download backup</button></form>
+            <form method="post" action="/admin/tools/optimize"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="border-input" type="submit">Optimize database</button></form>
+            <form method="post" action="/admin/tools/purge-cache"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="border-input" type="submit">Purge cache</button></form>
+            <form method="post" action="/admin/tools/maintenance"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">{{ maintenance ? 'Disable maintenance' : 'Enable maintenance' }}</button></form>
+        </div>
+    </section>
+</div>
+{% endblock %}

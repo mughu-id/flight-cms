@@ -1,0 +1,27 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>Post types</h1>
+        <p class="board-count">Kinds of content. Built-in types stay. Custom ones get their own sidebar item.</p>
+    </div>
+    <a class="bg-primary" href="/admin/post-types/new">Add post type</a>
+</div>
+<section class="board">
+    <table class="board-table">
+        <thead><tr><th>Name</th><th>Slug</th><th>URL</th><th></th></tr></thead>
+        <tbody>
+        {% for slug, type in types %}
+            <tr>
+                <td>{{ type.label }}{% if type.is_builtin %} <span class="badge">built-in</span>{% endif %}</td>
+                <td class="muted">{{ slug }}</td>
+                <td class="muted">/{{ type.rewrite|default(slug) }}</td>
+                <td class="actions">
+                    {% if not type.is_builtin %}<a href="/admin/post-types/{{ slug }}">Edit</a>{% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="stats">
+    <div class="stat"><span>Tokens</span><strong>{{ stats.tokens }}</strong></div>
+    <div class="stat"><span>Remote posts</span><strong>{{ stats.posts }}</strong></div>
+    <div class="stat"><span>Published</span><strong>{{ stats.published }}</strong></div>
+    <div class="stat"><span>Words received</span><strong>{{ stats.words }}</strong></div>
+</div>
+{% if new_token %}
+    <div class="token-reveal">
+        <strong>Copy this token now. It will not be shown again.</strong>
+        <code>{{ new_token }}</code>
+    </div>
+{% endif %}
+<div class="dash-grid">
+    <section class="panel">
+        <header>Endpoint</header>
+        <div class="term-add-body">
+            <p class="hint">Send the article HTML with your token. The post is published immediately.</p>
+            <code class="endpoint">POST {{ endpoint }}</code>
+            <pre class="snippet">curl -X POST {{ endpoint }} \
+  -H "X-Api-Token: YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"Article title\",\"category\":\"Houseplants\",\"html\":\"&lt;p&gt;...&lt;/p&gt;\"}"</pre>
+        </div>
+    </section>
+    <section class="panel">
+        <header>Tokens</header>
+        <form class="term-add-body" method="post" action="/admin/remote/tokens">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input name="name" placeholder="Token name, e.g. grok" required>
+            <button type="submit">Create token</button>
+        </form>
+        <ul class="rows">
+            {% for token in tokens %}
+                <li>
+                    <span>{{ token.name }}<small class="text-muted-foreground"> last used {{ token.last_used_at ?: 'never' }}</small></span>
+                    <form method="post" action="/admin/remote/tokens/{{ token.id }}/delete">
+                        <input type="hidden" name="csrf" value="{{ csrf }}">
+                        <button class="icon-btn destructive" title="Revoke" aria-label="Revoke">{{ icon('trash') }}</button>
+                    </form>
+                </li>
+            {% else %}<li class="text-muted-foreground">No tokens yet.</li>{% endfor %}
+        </ul>
+    </section>
+</div>
+<section class="board">
+    <table class="board-table">
+        <thead><tr><th>Recent remote posts</th><th>Token</th><th>Status</th><th>Published</th></tr></thead>
+        <tbody>
+        {% for post in recent %}
+            <tr>
+                <td><a class="board-title" href="/admin/content/post/{{ post.id }}">{{ post.title }}</a></td>
+                <td>{{ post.token_name }}</td>
+                <td><span class="pill pill-{{ post.status }}">{{ post.status }}</span></td>
+                <td class="muted">{{ post.published_at|default('-')|slice(0, 16) }}</td>
+            </tr>
+        {% else %}<tr><td colspan="4" class="empty">Nothing posted remotely yet.</td></tr>{% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>Redirects</h1>
+        <p class="board-count">Old paths that send visitors to a new URL.</p>
+    </div>
+</div>
+<section class="board">
+    <form class="board-filters" method="post" action="/admin/tools/redirects">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input name="source_path" placeholder="/old-path" required>
+        <input name="target_path" placeholder="/new-path" required>
+        <button type="submit">Add redirect</button>
+    </form>
+    <table class="board-table">
+        <thead><tr><th>From</th><th>To</th><th>Hits</th><th></th></tr></thead>
+        <tbody>
+        {% for r in redirects %}
+            <tr>
+                <td>{{ r.source_path }}</td>
+                <td>{{ r.target_path }}</td>
+                <td class="muted">{{ r.hits }}</td>
+                <td class="actions">
+                    <form method="post" action="/admin/tools/redirects/{{ r.id }}/delete">
+                        <input type="hidden" name="csrf" value="{{ csrf }}">
+                        <button class="icon-btn destructive" title="Delete" aria-label="Delete">{{ icon('trash') }}</button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="4" class="empty">No redirects.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

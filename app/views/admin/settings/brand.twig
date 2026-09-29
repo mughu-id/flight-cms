@@ -1,0 +1,32 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<form class="sheet" method="post" action="/admin/settings/brand" enctype="multipart/form-data">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field">Logo icon
+        <span class="hint">Shown beside the site name. Square PNG or SVG works best.</span>
+        {% if mods.logo %}<img src="{{ asset(mods.logo) }}" alt="" class="brand-preview">{% endif %}
+        <span class="file-pick">
+            <span class="file-btn">Choose image<input type="file" name="logo" accept="image/*,.ico"></span>
+            <span class="file-name">No image selected</span>
+        </span>
+    </label>
+    <label class="field">Favicon
+        <span class="hint">The small icon in the browser tab.</span>
+        {% if mods.favicon %}<img src="{{ asset(mods.favicon) }}" alt="" class="brand-preview">{% endif %}
+        <span class="file-pick">
+            <span class="file-btn">Choose image<input type="file" name="favicon" accept="image/*,.ico"></span>
+            <span class="file-name">No image selected</span>
+        </span>
+    </label>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}">
+document.querySelectorAll('.file-pick input').forEach(input => {
+    input.addEventListener('change', () => {
+        input.closest('.file-pick').querySelector('.file-name').textContent = input.files[0]?.name || 'No image selected';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ title|default('Admin') }} - {{ site_title }}{% endblock %}
+{% block body_class %}admin bg-muted text-foreground antialiased{% endblock %}
+{% block body %}
+<div class="flex h-dvh min-h-0 gap-2 overflow-hidden bg-muted p-2">
+    <aside class="flex min-h-0 w-52 shrink-0 flex-col overflow-hidden rounded-lg border border-sidebar-border bg-sidebar text-sidebar-foreground">
+        <a class="flex h-12 items-center gap-2 border-b border-sidebar-border px-3 no-underline" href="/admin">
+            <span class="flex size-6 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground">{{ site_title|first|upper }}</span>
+            <span class="truncate text-[13px] font-semibold tracking-tight text-foreground">{{ site_title }}</span>
+        </a>
+        <nav class="flex min-h-0 flex-1 flex-col gap-px overflow-y-auto p-2">
+            {% set path = current|split('?')|first %}
+            {% for item in menu %}
+                {% set match = item.match|default(item.url) %}
+                {% set extra = item.extra|default('') %}
+                {% set open = path == match or (match != '/admin' and path starts with match) or (extra and (path == extra or path starts with extra)) %}
+                {% for child in item.children|default([]) %}
+                    {% if path == child.url or path starts with (child.url ~ '/') %}{% set open = true %}{% endif %}
+                {% endfor %}
+                <a class="flex h-7 shrink-0 items-center gap-2 rounded-md px-2 text-[13px] no-underline {{ open and not item.children ? 'bg-sidebar-accent font-medium text-foreground' : (open ? 'font-medium text-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground') }}" href="{{ item.url }}">
+                    {{ icon(item.icon) }}
+                    <span class="truncate">{{ item.label }}</span>
+                    {% if item.children %}
+                        <span class="nav-caret {{ open ? 'is-open' : '' }}" aria-hidden="true">{{ icon('chevron-down') }}</span>
+                    {% endif %}
+                </a>
+                {% if item.children and open %}
+                    <div class="nav-kids">
+                        {% for child in item.children %}
+                            {% set kid = path == child.url or path starts with (child.url ~ '/') %}
+                            <a class="{{ kid ? 'is-on' : '' }}" href="{{ child.url }}">{{ child.label }}</a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </nav>
+    </aside>
+    <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-background">
+        <header class="flex h-12 shrink-0 items-center gap-3 border-b border-border px-4">
+            <p class="truncate text-[13px] font-medium tracking-tight">{{ title|default('Admin') }}</p>
+            <div class="ml-auto flex items-center gap-1">
+                <a class="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[13px] font-medium text-muted-foreground no-underline hover:bg-accent hover:text-foreground" href="/" target="_blank" rel="noopener">
+                    {{ icon('external-link') }} Visit site
+                </a>
+                <details class="user-menu">
+                    <summary class="inline-flex h-7 items-center gap-2 rounded-md px-1.5 text-[13px] font-medium">
+                        <span class="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">{{ current_user.display_name|default('?')|first|upper }}</span>
+                        <span class="max-w-32 truncate">{{ current_user.display_name|default('Account') }}</span>
+                        {{ icon('chevron-down') }}
+                    </summary>
+                    <div class="user-menu-panel">
+                        <p class="user-menu-name">{{ current_user.display_name|default('Account') }}<small>{{ current_user.role|default('') }}</small></p>
+                        <a href="/admin/profile">{{ icon('user') }} Profile</a>
+                        {% if can and can.can('manage_options') %}
+                            <a href="/admin/settings/general">{{ icon('settings') }} Settings</a>
+                        {% endif %}
+                        <a href="/" target="_blank" rel="noopener">{{ icon('external-link') }} Visit site</a>
+                        <hr>
+                        <form method="post" action="/admin/logout">
+                            <input type="hidden" name="csrf" value="{{ csrf }}">
+                            <button type="submit" class="danger">{{ icon('log-out') }} Log out</button>
+                        </form>
+                    </div>
+                </details>
+            </div>
+        </header>
+        <main class="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 [scrollbar-gutter:stable]">
+            {% if settings_nav is defined %}
+                <div class="ui-tabs">
+                    {% for key, label in settings_nav %}
+                        <a class="{{ section == key ? 'is-on' : '' }}" href="/admin/settings/{{ key }}">{{ label }}</a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if flash %}
+                <div class="mb-3 rounded-md border px-3 py-2 text-[13px] {{ flash.type == 'error' ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'border-border bg-muted text-foreground' }}">{{ flash.message }}</div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+<script nonce="{{ nonce }}">
+document.querySelectorAll('details.user-menu').forEach(menu => {
+    document.addEventListener('click', event => {
+        if (!menu.contains(event.target)) menu.removeAttribute('open');
+    });
+});
+</script>
+{% endblock %}

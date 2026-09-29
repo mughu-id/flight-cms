@@ -1,0 +1,61 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="stats">
+    <a class="stat" href="/admin/content/post"><span>Published posts</span><strong>{{ counts.posts }}</strong></a>
+    <a class="stat" href="/admin/content/page"><span>Pages</span><strong>{{ counts.pages }}</strong></a>
+    <a class="stat" href="/admin/comments?status=pending"><span>Pending comments</span><strong>{{ counts.comments }}</strong></a>
+    <a class="stat" href="/admin/media"><span>Media</span><strong>{{ counts.media }}</strong></a>
+</div>
+<div class="dash-grid">
+    <section class="panel">
+        <header>
+            Last 14 days
+            <span class="text-muted-foreground">{{ activity.posts }} posts, {{ activity.comments }} comments</span>
+        </header>
+        <table class="activity-table">
+            <thead><tr><th>Day</th><th>Posts</th><th>Comments</th></tr></thead>
+            <tbody>
+            {% for point in activity.points %}
+                <tr class="{{ point.posts == 0 and point.comments == 0 ? 'is-quiet' : '' }}">
+                    <td>{{ point.label }}</td>
+                    <td>{{ point.posts }}</td>
+                    <td>{{ point.comments }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    <section class="panel">
+        <header>By status <span class="text-muted-foreground">{{ statuses.total }}</span></header>
+        <div class="donut-wrap">
+            <svg viewBox="0 0 42 42" class="donut" role="img" aria-label="Posts by status">
+                <circle cx="21" cy="21" r="15.9" class="donut-track"></circle>
+                {% for slice in statuses.slices %}
+                    <circle cx="21" cy="21" r="15.9" class="donut-slice s-{{ loop.index }}" stroke-dasharray="{{ slice.dash }}" stroke-dashoffset="{{ slice.offset }}"><title>{{ slice.status }} {{ slice.n }}</title></circle>
+                {% endfor %}
+            </svg>
+            <ul class="rows">
+                {% for slice in statuses.slices %}
+                    <li><span class="swatch s-{{ loop.index }}"></span>{{ slice.status }}<span class="badge">{{ slice.n }}</span></li>
+                {% else %}
+                    <li class="text-muted-foreground">No content yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+</div>
+<section class="panel">
+    <header>Recent activity</header>
+    <ul class="rows">
+        {% for post in recent %}
+            <li>
+                <a href="/admin/content/{{ post.type }}/{{ post.id }}">{{ post.title ?: '(no title)' }}</a>
+                <span class="text-muted-foreground">{{ post.type }}</span>
+                <span class="badge">{{ post.status }}</span>
+            </li>
+        {% else %}
+            <li class="text-muted-foreground">Nothing yet.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

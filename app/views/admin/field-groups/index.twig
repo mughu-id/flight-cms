@@ -1,0 +1,26 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>Field groups</h1>
+        <p class="board-count">Extra fields shown on the post editor.</p>
+    </div>
+    <a class="bg-primary" href="/admin/field-groups/new">Add field group</a>
+</div>
+<section class="board">
+    <table class="board-table">
+        <thead><tr><th>Title</th><th>Post types</th><th></th></tr></thead>
+        <tbody>
+        {% for group in groups %}
+            <tr>
+                <td>{{ group.title }}</td>
+                <td class="muted">{{ group.post_types|join(', ') }}</td>
+                <td class="actions"><a href="/admin/field-groups/{{ group.id }}">Edit</a></td>
+            </tr>
+        {% else %}
+            <tr><td colspan="3" class="empty">No field groups.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

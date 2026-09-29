@@ -1,0 +1,98 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+{% set pages = per_page > 0 ? (total / per_page)|round(0, 'ceil') : 1 %}
+{% set query = 'status=' ~ status ~ '&q=' ~ q|url_encode %}
+<form id="search-{{ type.slug }}" method="get" hidden>
+    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+</form>
+<div class="page-bar">
+    <div>
+        <h1>{{ type.label }}</h1>
+        <p class="board-count">{{ total }} {{ total == 1 ? type.label_singular|lower : type.label|lower }}</p>
+    </div>
+    <a class="bg-primary" href="/admin/content/{{ type.slug }}/new">Add {{ type.label_singular }}</a>
+</div>
+<section class="board">
+    <form method="post" action="/admin/content/{{ type.slug }}/bulk">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <div class="board-filters">
+            <input name="q" value="{{ q }}" placeholder="Search {{ type.label|lower }}" form="search-{{ type.slug }}">
+            <select onchange="location.href='?status='+encodeURIComponent(this.value)+'&q='+encodeURIComponent({{ q|json_encode }})">
+                <option value="">All statuses</option>
+                {% for name, count in counts %}
+                    <option value="{{ name }}" {{ status == name ? 'selected' : '' }}>{{ name|capitalize }} ({{ count }})</option>
+                {% endfor %}
+            </select>
+            <div class="bulk">
+                <span id="selected-count"></span>
+                <select name="action">
+                    <option value="publish">Publish</option>
+                    <option value="draft">Move to draft</option>
+                    <option value="trash">Trash</option>
+                    <option value="restore">Restore</option>
+                    <option value="delete">Delete</option>
+                </select>
+                <button class="border-input" type="submit">Apply</button>
+            </div>
+        </div>
+        <table class="board-table">
+            <thead>
+                <tr><th class="pick"><input type="checkbox" id="select-all" aria-label="Select all"></th><th>Title</th><th>Author</th><th>Status</th><th>Updated</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td class="pick"><input type="checkbox" name="ids[]" value="{{ row.id }}"></td>
+                    <td>
+                        <a class="board-title" href="/admin/content/{{ type.slug }}/{{ row.id }}">{{ row.title ?: '(no title)' }}</a>
+                        <div class="board-sub">/{{ row.slug }}</div>
+                    </td>
+                    <td>
+                        <span class="board-author">
+                            <span class="board-avatar">{{ row.author_name|default('?')|first|upper }}</span>
+                            {{ row.author_name }}
+                        </span>
+                    </td>
+                    <td><span class="pill pill-{{ row.status }}">{{ row.status }}</span></td>
+                    <td class="muted">{{ row.updated_at|slice(0, 16) }}</td>
+                    <td class="actions"><a class="icon-btn border-input" href="/admin/content/{{ type.slug }}/{{ row.id }}" title="Edit" aria-label="Edit">{{ icon('pencil') }}</a></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="empty">Nothing matches these filters.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    {% if pages > 1 %}
+    <nav class="pager">
+        <a class="{{ page <= 1 ? 'is-off' : '' }}" href="?{{ query }}&page={{ page - 1 }}">Previous</a>
+        {% for n in 1..pages %}
+            <a class="{{ n == page ? 'is-on' : '' }}" href="?{{ query }}&page={{ n }}">{{ n }}</a>
+        {% endfor %}
+        <a class="{{ page >= pages ? 'is-off' : '' }}" href="?{{ query }}&page={{ page + 1 }}">Next</a>
+    </nav>
+    {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}">
+const form = document.querySelector('.board form');
+const all = document.getElementById('select-all');
+const boxes = () => [...form.querySelectorAll('input[name="ids[]"]')];
+const count = document.getElementById('selected-count');
+const sync = () => {
+    const n = boxes().filter((box) => box.checked).length;
+    count.textContent = n ? n + ' selected' : '';
+    all.indeterminate = n > 0 && n < boxes().length;
+    all.checked = boxes().length > 0 && n === boxes().length;
+};
+all.addEventListener('change', () => { boxes().forEach((box) => { box.checked = all.checked; }); sync(); });
+boxes().forEach((box) => box.addEventListener('change', sync));
+form.addEventListener('submit', (event) => {
+    const n = boxes().filter((box) => box.checked).length;
+    if (n < 1) { event.preventDefault(); return; }
+    const action = form.querySelector('[name="action"]').value;
+    if (action === 'delete' && !confirm('Delete ' + n + ' permanently? This cannot be undone.')) event.preventDefault();
+});
+</script>
+{% endblock %}

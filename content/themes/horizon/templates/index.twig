@@ -1,0 +1,71 @@
+{% extends '@theme/layout.twig' %}
+{% block content %}
+{% if posts %}
+{% set lead = theme_mod('hero_count', '4') %}
+{% if lead != '0' %}
+<section class="mosaic">
+    {% for post in posts|slice(0, lead) %}
+        <a class="tile tile-{{ loop.index }} hue-{{ post.id % 6 }}" href="{{ permalink(post) }}" {% if thumb(post) %}style="background-image:url('{{ thumb(post) }}')"{% endif %}>
+            {% if topic(post) %}<span class="chip">{{ topic(post) }}</span>{% endif %}
+            <span class="tile-copy">
+                <strong>{{ post.title }}</strong>
+                <small>{{ post.author_name|default(site_title) }} · {{ post.published_at|local_date }}</small>
+            </span>
+        </a>
+    {% endfor %}
+</section>
+{% endif %}
+<div class="feed">
+    {% for post in posts|slice(lead == '0' ? 0 : lead) %}
+        <article>
+            <a class="feed-thumb hue-{{ post.id % 6 }}" href="{{ permalink(post) }}" {% if thumb(post) %}style="background-image:url('{{ thumb(post) }}')"{% endif %}></a>
+            <div>
+                {% if topic(post) %}<span class="chip">{{ topic(post) }}</span>{% endif %}
+                <h2><a href="{{ permalink(post) }}">{{ post.title }}</a></h2>
+                <p class="by">{{ post.author_name|default(site_title) }} · {{ post.published_at|local_date }}</p>
+                <p>{{ post.excerpt ?: post.content|excerpt(28) }}</p>
+            </div>
+        </article>
+    {% endfor %}
+</div>
+{% else %}<p class="empty">Nothing published yet.</p>{% endif %}
+{% if pages is defined and pages > 1 %}
+    {% if pagination|default('numbers') == 'numbers' %}
+    <nav class="pager">
+        {% for n in 1..pages %}
+            <a class="{{ n == page ? 'is-on' : '' }}" href="{{ n == 1 ? '/' : '/page/' ~ n }}">{{ n }}</a>
+        {% endfor %}
+    </nav>
+    {% elseif page < pages %}
+    <button type="button" class="load-more" data-next="{{ page + 1 }}" data-last="{{ pages }}" data-mode="{{ pagination }}">Load more</button>
+    {% endif %}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}">
+const btn = document.querySelector('.load-more');
+const feed = document.querySelector('.feed');
+if (btn && feed) {
+    let loading = false;
+    const more = async () => {
+        if (loading) return;
+        const next = Number(btn.dataset.next);
+        if (next > Number(btn.dataset.last)) { btn.remove(); return; }
+        loading = true;
+        btn.textContent = 'Loading…';
+        try {
+            const html = await fetch('/page/' + next + '?feed=1').then(response => response.text());
+            feed.insertAdjacentHTML('beforeend', html);
+            btn.dataset.next = String(next + 1);
+            btn.textContent = 'Load more';
+            if (next >= Number(btn.dataset.last)) btn.remove();
+        } catch (error) {
+            btn.textContent = 'Load more';
+        }
+        loading = false;
+    };
+    btn.addEventListener('click', more);
+    if (btn.dataset.mode === 'infinite') new IntersectionObserver(entries => { if (entries.some(entry => entry.isIntersecting)) more(); }).observe(btn);
+}
+</script>
+{% endblock %}

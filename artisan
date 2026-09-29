@@ -1,0 +1,49 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$root = __DIR__;
+$args = array_slice($argv, 1);
+$command = $args[0] ?? 'list';
+
+if ($command === 'serve') {
+    $host = '127.0.0.1';
+    $port = '1155';
+    $rest = array_slice($args, 1);
+    for ($i = 0; $i < count($rest); $i++) {
+        $arg = $rest[$i];
+        if (preg_match('/^--host=(.+)$/', $arg, $m)) {
+            $host = $m[1];
+        } elseif ($arg === '--host' && isset($rest[$i + 1])) {
+            $host = $rest[++$i];
+        } elseif (preg_match('/^--port=(.+)$/', $arg, $m)) {
+            $port = $m[1];
+        } elseif ($arg === '--port' && isset($rest[$i + 1])) {
+            $port = $rest[++$i];
+        }
+    }
+    if (!preg_match('/^\d+$/', $port) || !preg_match('/^[A-Za-z0-9.:\-]+$/', $host)) {
+        fwrite(STDERR, "Invalid host or port.\n");
+        exit(1);
+    }
+    echo "Flight CMS running at http://{$host}:{$port}\n";
+    $cmd = escapeshellarg(PHP_BINARY)
+        . ' -S ' . escapeshellarg($host . ':' . $port)
+        . ' -t ' . escapeshellarg($root . DIRECTORY_SEPARATOR . 'public')
+        . ' ' . escapeshellarg($root . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'router.php');
+    passthru($cmd, $code);
+    exit($code);
+}
+
+$runway = $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'runway';
+if (!is_file($runway)) {
+    fwrite(STDERR, "Run composer install first.\n");
+    exit(1);
+}
+$cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($runway);
+foreach ($args as $arg) {
+    $cmd .= ' ' . escapeshellarg($arg);
+}
+passthru($cmd, $code);
+exit($code);

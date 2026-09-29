@@ -1,0 +1,86 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+{% set pages = per_page > 0 ? (total / per_page)|round(0, 'ceil') : 1 %}
+<div class="page-bar">
+    <div>
+        <h1>Comments</h1>
+        <p class="board-count">{{ total }} {{ status }}</p>
+    </div>
+</div>
+<section class="board">
+    <form method="post" action="/admin/comments/bulk">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="status" value="{{ status }}">
+        <div class="board-filters">
+            <div class="ui-tabs">
+                {% for name in ['pending', 'approved', 'spam', 'trash'] %}
+                    <a class="{{ status == name ? 'is-on' : '' }}" href="/admin/comments?status={{ name }}">{{ name|capitalize }} ({{ counts[name]|default(0) }})</a>
+                {% endfor %}
+            </div>
+            <div class="bulk">
+                <span id="selected-count"></span>
+                <select name="action">
+                    <option value="approve">Approve</option>
+                    <option value="spam">Spam</option>
+                    <option value="trash">Trash</option>
+                    <option value="delete">Delete</option>
+                </select>
+                <button class="border-input" type="submit">Apply</button>
+            </div>
+        </div>
+        <table class="board-table">
+            <thead>
+                <tr><th class="pick"><input type="checkbox" id="select-all" aria-label="Select all"></th><th>Author</th><th>Comment</th><th>On</th><th>When</th></tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td class="pick"><input type="checkbox" name="ids[]" value="{{ row.id }}"></td>
+                    <td>
+                        <span class="board-author">
+                            <span class="board-avatar">{{ row.author_name|default('?')|first|upper }}</span>
+                            <span>{{ row.author_name }}<span class="board-sub">{{ row.author_email }}</span></span>
+                        </span>
+                    </td>
+                    <td class="comment-body">{{ row.content }}</td>
+                    <td class="muted">{{ row.post_title|default('—') }}</td>
+                    <td class="muted">{{ row.created_at|slice(0, 16) }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="empty">No {{ status }} comments.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    {% if pages > 1 %}
+    <nav class="pager">
+        <a class="{{ page <= 1 ? 'is-off' : '' }}" href="?status={{ status }}&page={{ page - 1 }}">Previous</a>
+        {% for n in 1..pages %}
+            <a class="{{ n == page ? 'is-on' : '' }}" href="?status={{ status }}&page={{ n }}">{{ n }}</a>
+        {% endfor %}
+        <a class="{{ page >= pages ? 'is-off' : '' }}" href="?status={{ status }}&page={{ page + 1 }}">Next</a>
+    </nav>
+    {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}">
+const form = document.querySelector('.board form');
+const all = document.getElementById('select-all');
+const boxes = () => [...form.querySelectorAll('input[name="ids[]"]')];
+const count = document.getElementById('selected-count');
+const sync = () => {
+    const n = boxes().filter((box) => box.checked).length;
+    count.textContent = n ? n + ' selected' : '';
+    all.indeterminate = n > 0 && n < boxes().length;
+    all.checked = boxes().length > 0 && n === boxes().length;
+};
+all.addEventListener('change', () => { boxes().forEach((box) => { box.checked = all.checked; }); sync(); });
+boxes().forEach((box) => box.addEventListener('change', sync));
+form.addEventListener('submit', (event) => {
+    const n = boxes().filter((box) => box.checked).length;
+    if (n < 1) { event.preventDefault(); return; }
+    if (form.querySelector('[name="action"]').value === 'delete' && !confirm('Delete ' + n + ' permanently? This cannot be undone.')) event.preventDefault();
+});
+</script>
+{% endblock %}

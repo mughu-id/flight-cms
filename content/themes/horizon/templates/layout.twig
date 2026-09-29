@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ site_title }}{% endblock %}</title>
+    {{ seo_head(post|default(null)) }}
+    <link rel="stylesheet" href="/assets/app.css">
+    <style nonce="{{ nonce }}">:root{--accent:{{ theme_mod('accent_color', '#3f6212') }};--page:{{ theme_mod('page_bg', '#f3f1ec') }};--surface:{{ theme_mod('surface_bg', '#ffffff') }};--ink:{{ theme_mod('text_color', '#1c1917') }};}</style>
+    {% if theme_mod('favicon') %}<link rel="icon" href="{{ asset(theme_mod('favicon')) }}">{% endif %}
+</head>
+<body class="news {{ body_class() }}">
+{% if preview|default(false) %}<p class="preview-bar">Preview · not published yet <a href="javascript:history.back()">Back to editor</a></p>{% endif %}
+<header class="news-bar">
+    <div class="news-top">
+        <a class="news-brand" href="/">{% if theme_mod('logo') %}<img src="{{ asset(theme_mod('logo')) }}" alt="">{% else %}<span>{{ site_title|first|upper }}</span>{% endif %}{% if theme_mod('show_name', '1') != '0' %}{{ site_title }}{% endif %}</a>
+        <nav>{% for item in menu('primary') %}<a href="{{ item.url }}">{{ item.title }}</a>{% endfor %}</nav>
+    </div>
+    {% if theme_mod('show_cats', '1') != '0' %}
+    <nav class="news-cats">
+        {% for term in categories() %}
+            <a href="/{{ setting('category_base', 'category') }}/{{ term.slug }}">{{ term.name }}</a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+</header>
+<div class="news-shell">
+    <main>{% block content %}{% endblock %}</main>
+    <aside class="news-side">
+        {% for widget in sidebar_widgets() %}
+            {% if widget == 'search' %}
+            <section class="side-card">
+                <h2 class="search-label">Search</h2>
+                <form action="/search" onsubmit="var q=this.q.value.trim(); if(q) location.href='/search/'+encodeURIComponent(q); return false;">
+                    <input name="q" placeholder="Find an article" value="{{ query|default('') }}">
+                    <button type="submit">Go</button>
+                </form>
+            </section>
+            {% elseif widget == 'about' %}
+            <section class="side-card">
+                <h2>About</h2>
+                <strong>{{ site_title }}</strong>
+                <p>{{ setting('tagline', '') }}</p>
+            </section>
+            {% elseif widget == 'topics' %}
+            <section class="side-card">
+                <h2>Topics</h2>
+                <ul>
+                    {% for term in categories() %}
+                        <li><a href="/{{ setting('category_base', 'category') }}/{{ term.slug }}">{{ term.name }}</a><span>{{ term.count }}</span></li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% elseif widget == 'tags' %}
+            <section class="side-card">
+                <h2>Tags</h2>
+                <div class="tag-cloud">
+                    {% for term in tags() %}
+                        <a href="/{{ setting('tag_base', 'tag') }}/{{ term.slug }}">{{ term.name }}</a>
+                    {% else %}<p>No tags yet.</p>{% endfor %}
+                </div>
+            </section>
+            {% elseif widget == 'pages' %}
+            <section class="side-card">
+                <h2>Pages</h2>
+                <ul>
+                    {% for item in get_posts({type: 'page', per_page: 6}) %}
+                        <li><a href="{{ permalink(item) }}">{{ item.title }}</a></li>
+                    {% else %}<li>No pages yet.</li>{% endfor %}
+                </ul>
+            </section>
+            {% elseif widget == 'archives' %}
+            <section class="side-card">
+                <h2>Archives</h2>
+                <ul>
+                    {% for month in archives() %}
+                        <li><a href="/{{ month.year }}/{{ month.month }}">{{ month.label }}</a><span>{{ month.count }}</span></li>
+                    {% else %}<li>Nothing published yet.</li>{% endfor %}
+                </ul>
+            </section>
+            {% elseif widget == 'comments' %}
+            <section class="side-card">
+                <h2>Comments</h2>
+                {% for comment in recent_comments() %}
+                    <a class="side-note" href="{{ comment.url }}#comments"><b>{{ comment.author_name }}</b><span>{{ comment.content|excerpt(14) }}</span></a>
+                {% else %}<p>No comments yet.</p>{% endfor %}
+            </section>
+            {% elseif widget == 'feed' %}
+            <section class="side-card">
+                <h2>Feed</h2>
+                <a class="side-link" href="/feed">Subscribe with RSS</a>
+            </section>
+            {% elseif widget == 'recent' or widget == 'popular' or widget == 'random' %}
+            <section class="side-card">
+                <h2>{{ widget == 'recent' ? 'Recent' : (widget == 'popular' ? 'Popular' : 'Random') }}</h2>
+                {% for item in get_posts({per_page: 5, sort: widget}) %}
+                    <a class="recent" href="{{ permalink(item) }}">
+                        <span class="thumb hue-{{ item.id % 6 }}" {% if thumb(item) %}style="background-image:url('{{ thumb(item) }}')"{% endif %}></span>
+                        <span><b>{{ item.title }}</b><time>{{ item.published_at|local_date }}</time></span>
+                    </a>
+                {% endfor %}
+            </section>
+            {% endif %}
+        {% endfor %}
+    </aside>
+</div>
+<footer class="news-foot">
+    <div class="foot-col">
+        <p class="foot-label">About</p>
+        <p>{{ theme_mod('footer_text') ?: setting('tagline', '') }}</p>
+    </div>
+    <div class="foot-col">
+        <p class="foot-label">Topics</p>
+        <nav>
+            {% for term in categories() %}
+                <a href="/{{ setting('category_base', 'category') }}/{{ term.slug }}">{{ term.name }}</a>
+            {% endfor %}
+        </nav>
+    </div>
+    <div class="foot-col">
+        <p class="foot-label">Pages</p>
+        <nav>
+            {% for item in menu('footer') %}
+                <a href="{{ item.url }}">{{ item.title }}</a>
+            {% else %}
+                {% for item in menu('primary') %}<a href="{{ item.url }}">{{ item.title }}</a>{% endfor %}
+            {% endfor %}
+        </nav>
+    </div>
+    <p class="foot-copy">&copy; {{ 'now'|date('Y') }} {{ site_title }}</p>
+</footer>
+<button type="button" class="to-top" hidden aria-label="Back to top">{{ icon('arrow-up') }}</button>
+<script src="/assets/to-top.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

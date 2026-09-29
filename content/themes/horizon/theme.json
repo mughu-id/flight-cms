@@ -1,0 +1,16 @@
+{
+    "name": "Horizon",
+    "version": "1.0.0",
+    "parent": null,
+    "menus": {"primary": "Primary menu", "footer": "Footer menu"},
+    "page_templates": {"full-width": "Full width"},
+    "settings": [
+        {"key": "accent_color", "type": "color", "label": "Accent", "group": "colors", "default": "#3f6212"},
+        {"key": "page_bg", "type": "color", "label": "Page", "group": "colors", "default": "#f3f1ec"},
+        {"key": "surface_bg", "type": "color", "label": "Cards", "group": "colors", "default": "#ffffff"},
+        {"key": "text_color", "type": "color", "label": "Text", "group": "colors", "default": "#1c1917"},
+        {"key": "show_cats", "type": "check", "label": "Category strip under the header", "group": "header", "default": "1"},
+        {"key": "hero_count", "type": "select", "label": "Lead stories", "group": "home", "default": "4", "options": {"0": "None", "2": "Two", "4": "Four"}},
+        {"key": "footer_text", "type": "textarea", "label": "About text", "group": "footer", "default": ""}
+    ]
+}

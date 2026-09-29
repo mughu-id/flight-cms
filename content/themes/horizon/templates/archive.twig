@@ -1,0 +1,18 @@
+{% extends '@theme/layout.twig' %}
+{% block title %}{{ term.name|default('Archive') }} - {{ site_title }}{% endblock %}
+{% block content %}
+<div class="feed">
+    {% for post in posts %}
+        <article>
+            <a class="feed-thumb hue-{{ post.id % 6 }}" href="{{ permalink(post) }}" {% if thumb(post) %}style="background-image:url('{{ thumb(post) }}')"{% endif %}>
+                {% if topic(post) %}<span class="chip">{{ topic(post) }}</span>{% endif %}
+            </a>
+            <div>
+                <h2><a href="{{ permalink(post) }}">{{ post.title }}</a></h2>
+                <p class="by">{{ post.author_name|default(site_title) }} · {{ post.published_at|local_date }}</p>
+                <p>{{ post.excerpt ?: post.content|excerpt(28) }}</p>
+            </div>
+        </article>
+    {% else %}<p class="empty">No stories in this section.</p>{% endfor %}
+</div>
+{% endblock %}

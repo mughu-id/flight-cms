@@ -1,0 +1,44 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<div class="page-bar">
+    <div>
+        <h1>{{ type ? 'Edit' : 'Add' }} post type</h1>
+        <p class="board-count">{{ type ? type.slug : 'A new kind of content, with its own list in the sidebar.' }}</p>
+    </div>
+</div>
+<form class="sheet" method="post" action="{{ type ? '/admin/post-types/' ~ type.slug : '/admin/post-types' }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field">Plural label<input name="label" value="{{ type.label|default('') }}" placeholder="Books" required></label>
+    <label class="field">Singular label<input name="label_singular" value="{{ type.label_singular|default('') }}" placeholder="Book" required></label>
+    {% if not type %}
+        <label class="field">Slug<input name="slug" placeholder="book"><span class="muted">Leave empty to build it from the singular label.</span></label>
+    {% endif %}
+    <label class="field">URL rewrite<input name="rewrite" value="{{ type.rewrite|default('') }}" placeholder="books"></label>
+    <label class="field">Icon<input name="icon" value="{{ type.icon|default('file-earmark') }}"></label>
+    <label class="check"><input type="checkbox" name="public" value="1" {{ not type or type.public ? 'checked' : '' }}> Public on the site</label>
+    <label class="check"><input type="checkbox" name="has_archive" value="1" {{ type and type.has_archive ? 'checked' : '' }}> Has an archive page</label>
+    <label class="check"><input type="checkbox" name="hierarchical" value="1" {{ type and type.hierarchical ? 'checked' : '' }}> Hierarchical, like pages</label>
+    <fieldset class="field">
+        <legend>Supports</legend>
+        <div class="pick-row">
+            {% for feature in ['title','editor','excerpt','thumbnail','comments','revisions','page-attributes'] %}
+                <label class="check"><input type="checkbox" name="supports[]" value="{{ feature }}" {{ not type or feature in type.supports ? 'checked' : '' }}> {{ feature }}</label>
+            {% endfor %}
+        </div>
+    </fieldset>
+    <fieldset class="field">
+        <legend>Taxonomies</legend>
+        <div class="pick-row">
+            <label class="check"><input type="checkbox" name="taxonomies[]" value="category" {{ type and 'category' in type.taxonomies ? 'checked' : '' }}> Categories</label>
+            <label class="check"><input type="checkbox" name="taxonomies[]" value="tag" {{ type and 'tag' in type.taxonomies ? 'checked' : '' }}> Tags</label>
+        </div>
+    </fieldset>
+    <button type="submit">Save</button>
+</form>
+{% if type and not type.is_builtin %}
+<form method="post" action="/admin/post-types/{{ type.slug }}/delete" class="sheet" onsubmit="return confirm('Delete this post type?')">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="border-input" type="submit">Delete post type</button>
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+{% set pages = per_page > 0 ? (total / per_page)|round(0, 'ceil') : 1 %}
+{% set query = 'q=' ~ q|url_encode ~ '&type=' ~ type|url_encode %}
+{% if total == 0 and not q and not type %}
+<div class="library-empty" id="uploader">
+    <span class="library-mark">{{ icon('upload') }}</span>
+    <h2>Your library is empty</h2>
+    <p>Drop images here, or pick files from your computer.</p>
+    <label class="bg-primary media-upload">Choose files<input id="file" type="file" multiple hidden></label>
+</div>
+{% else %}
+<div class="library" id="uploader">
+    <div class="library-bar">
+        <form method="get">
+            <input name="q" value="{{ q }}" placeholder="Search">
+        </form>
+        <div class="ui-tabs">
+            {% for key, label in { '': 'All', image: 'Images', application: 'Documents' } %}
+                <a class="{{ type == key ? 'is-on' : '' }}" href="/admin/media?q={{ q|url_encode }}&type={{ key }}">{{ label }}</a>
+            {% endfor %}
+        </div>
+        <label class="bg-primary media-upload">{{ icon('upload') }} Upload<input id="file" type="file" multiple hidden></label>
+    </div>
+    <div class="media-grid">
+        {% for item in items %}
+            <article class="media-card">
+                <div class="media-thumb">
+                    {% if item.mime_type starts with 'image/' %}
+                        <img src="/uploads/{{ item.sizes.thumbnail.path|default(item.path) }}" alt="{{ item.alt }}">
+                    {% else %}
+                        <div class="media-file">{{ item.mime_type|split('/')|last|upper }}</div>
+                    {% endif %}
+                    <p class="media-name">{{ item.title ?: 'Untitled' }}</p>
+                    <div class="media-overlay">
+                        <button class="icon-btn" type="button" title="Edit" aria-label="Edit" data-edit data-id="{{ item.id }}" data-title="{{ item.title }}" data-alt="{{ item.alt }}" data-caption="{{ item.caption }}">{{ icon('pencil') }}</button>
+                        <button class="icon-btn" type="button" title="Copy URL" aria-label="Copy URL" data-copy="/uploads/{{ item.path }}">{{ icon('copy') }}</button>
+                        <form method="post" action="/admin/media/{{ item.id }}/delete" onsubmit="return confirm('Delete this file?')">
+                            <input type="hidden" name="csrf" value="{{ csrf }}">
+                            <button class="icon-btn" type="submit" title="Delete" aria-label="Delete">{{ icon('trash') }}</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        {% else %}
+            <p class="library-none">Nothing matches that search.</p>
+        {% endfor %}
+    </div>
+    {% if pages > 1 %}
+    <nav class="pager">
+        <a class="{{ page <= 1 ? 'is-off' : '' }}" href="?{{ query }}&page={{ page - 1 }}">Previous</a>
+        {% for n in 1..pages %}
+            <a class="{{ n == page ? 'is-on' : '' }}" href="?{{ query }}&page={{ n }}">{{ n }}</a>
+        {% endfor %}
+        <a class="{{ page >= pages ? 'is-off' : '' }}" href="?{{ query }}&page={{ page + 1 }}">Next</a>
+    </nav>
+    {% endif %}
+</div>
+{% endif %}
+<dialog class="media-dialog" id="media-dialog">
+    <form class="sheet" method="post">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label class="field">Title<input name="title"></label>
+        <label class="field">Alt text<input name="alt"></label>
+        <label class="field">Caption<textarea name="caption" rows="3"></textarea></label>
+        <div class="media-dialog-actions">
+            <button type="button" class="border-input" data-close>Cancel</button>
+            <button type="submit">Save</button>
+        </div>
+    </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ nonce }}">
+const input = document.getElementById('file');
+const zone = document.getElementById('uploader');
+function upload(files) {
+    if (!files.length) return;
+    Promise.all([...files].map(file => {
+        const data = new FormData();
+        data.append('file', file);
+        data.append('csrf', '{{ csrf }}');
+        return fetch('/admin/media/upload', {method: 'POST', body: data}).then(res => {
+            if (!res.ok) throw new Error('Upload failed');
+        });
+    })).then(() => location.reload()).catch(() => alert('Upload failed.'));
+    input.value = '';
+}
+input.addEventListener('change', () => upload(input.files));
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('is-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('is-over'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('is-over'); upload(e.dataTransfer.files); });
+document.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', () => navigator.clipboard.writeText(location.origin + btn.dataset.copy)));
+const dialog = document.getElementById('media-dialog');
+const form = dialog.querySelector('form');
+document.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => {
+    form.action = '/admin/media/' + btn.dataset.id;
+    form.title.value = btn.dataset.title || '';
+    form.alt.value = btn.dataset.alt || '';
+    form.caption.value = btn.dataset.caption || '';
+    dialog.showModal();
+}));
+dialog.querySelector('[data-close]').addEventListener('click', () => dialog.close());
+</script>
+{% endblock %}

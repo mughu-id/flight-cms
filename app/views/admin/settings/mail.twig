@@ -1,0 +1,10 @@
+{% extends 'admin/layout.twig' %}
+{% block content %}
+<form class="sheet" method="post" action="/admin/settings/mail">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field">From address<input name="mail_from" value="{{ settings.mail_from|default('') }}"></label>
+    <label class="field">SMTP DSN<input name="mail_dsn" value="{{ settings.mail_dsn|default('') }}" placeholder="smtp://user:pass@host:587"></label>
+    <label class="field">Send a test to<input type="email" name="test_to" placeholder="you@example.com"></label>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}
