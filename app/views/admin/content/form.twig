@@ -39,6 +39,18 @@
                     {% if post %}<a class="border-input" href="/preview/{{ post.id }}" target="_blank">Preview</a>{% endif %}
                 </div>
             </div></div>
+            <details class="panel" open>
+                <summary>Featured image</summary>
+                {% if featured %}
+                    <img class="featured-preview" src="{{ featured }}" alt="">
+                {% else %}
+                    <p class="hint">No featured image yet.</p>
+                {% endif %}
+                <input type="hidden" name="featured_media_id" value="{{ post.featured_media_id|default(0) }}">
+                {% if post and not featured %}
+                    <button class="border-input" type="submit" formaction="/admin/content/{{ type.slug }}/{{ post.id }}/feature">Use first image</button>
+                {% endif %}
+            </details>
             {% if 'page-attributes' in type.supports %}
             <details class="panel">
                 <summary>Page</summary>

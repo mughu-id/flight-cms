@@ -55,6 +55,7 @@ class ContentController extends DashboardController
             'taxonomies' => $this->taxonomyData($type, null),
             'field_groups' => $this->app->make(FieldGroupRepository::class)->forType($type),
             'meta' => [],
+            'featured' => '',
         ]);
     }
 
@@ -95,6 +96,7 @@ class ContentController extends DashboardController
             'taxonomies' => $this->taxonomyData($type, (int) $post['id']),
             'field_groups' => $this->app->make(FieldGroupRepository::class)->forType($type),
             'meta' => $this->app->make(FieldGroupRepository::class)->allMeta((int) $post['id']),
+            'featured' => $this->featuredUrl($post),
         ]);
     }
 
@@ -337,6 +339,17 @@ class ContentController extends DashboardController
         }
         $rows = $this->posts()->list('page', ['status' => ''], 1, 200)['rows'];
         return array_values(array_filter($rows, static fn (array $row): bool => (int) $row['id'] !== $ignore));
+    }
+
+    /** @param array<string, mixed> $post */
+    private function featuredUrl(array $post): string
+    {
+        $id = (int) ($post['featured_media_id'] ?? 0);
+        if ($id < 1) {
+            return '';
+        }
+        $media = $this->app->make(\App\Repository\MediaRepository::class)->find($id);
+        return $media ? '/uploads/' . $media['path'] : '';
     }
 
     /** @return array<string, mixed> */

@@ -45,15 +45,15 @@
                     <td class="pick"><input type="checkbox" name="ids[]" value="{{ row.id }}"></td>
                     <td>
                         <div class="board-post">
-                            {% if row.featured_path %}
-                                <img class="board-thumb" src="/uploads/{{ row.featured_path }}" alt="">
+                            {% if row.thumb %}
+                                <img class="board-thumb" src="{{ row.thumb }}" alt="">
                             {% else %}
                                 <span class="board-thumb is-empty"></span>
                             {% endif %}
                             <div>
                                 <a class="board-title" href="/admin/content/{{ type.slug }}/{{ row.id }}">{{ row.title ?: '(no title)' }}</a>
                                 <div class="board-sub">/{{ row.slug }}</div>
-                                {% if not row.featured_path and row.content matches '/<img\\b/i' %}
+                                {% if not row.featured_path and row.thumb %}
                                     <button class="border-input" type="submit" formaction="/admin/content/{{ type.slug }}/{{ row.id }}/feature">Use first image</button>
                                 {% endif %}
                             </div>
@@ -101,7 +101,7 @@ const sync = () => {
 all.addEventListener('change', () => { boxes().forEach((box) => { box.checked = all.checked; }); sync(); });
 boxes().forEach((box) => box.addEventListener('change', sync));
 form.addEventListener('submit', (event) => {
-    if (event.submitter && event.submitter.hasAttribute('formaction')) return;
+    if (event.submitter && event.submitter.getAttribute('formaction')) return;
     const n = boxes().filter((box) => box.checked).length;
     if (n < 1) { event.preventDefault(); return; }
     const action = form.querySelector('[name="action"]').value;

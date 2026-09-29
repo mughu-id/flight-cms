@@ -34,6 +34,10 @@ class PostRepository
              WHERE {$where} ORDER BY p.{$order} {$dir} LIMIT {$perPage} OFFSET {$offset}",
             $params
         ));
+        foreach ($rows as &$row) {
+            $row['thumb'] = $row['featured_path'] ? '/uploads/' . $row['featured_path'] : $this->firstImage((string) ($row['content'] ?? ''));
+        }
+        unset($row);
         return ['rows' => $rows, 'total' => $total];
     }
 
@@ -49,6 +53,14 @@ class PostRepository
             $counts[$row['status']] = (int) $row['n'];
         }
         return $counts;
+    }
+
+    private function firstImage(string $html): string
+    {
+        if (preg_match('/<img\b[^>]*\b(?:src|data-src)=["\']([^"\']+)["\']/i', $html, $match)) {
+            return html_entity_decode($match[1], ENT_QUOTES);
+        }
+        return '';
     }
 
     /** @param array<string, mixed> $data */

@@ -662,6 +662,7 @@
 .admin main .board-thumb { display: block; width: 3rem; height: 3rem; flex: none; border-radius: 0.45rem; object-fit: cover; background: var(--color-muted); }
 .admin main .board-thumb.is-empty { border: 1px dashed var(--color-input); }
 .admin main .board-post form { margin: 0.35rem 0 0; }
+.admin main .featured-preview { display: block; width: 100%; max-height: 9rem; border-radius: 0.5rem; object-fit: cover; background: var(--color-muted); }
 .admin main td.actions {
     width: 1%;
     white-space: nowrap;
