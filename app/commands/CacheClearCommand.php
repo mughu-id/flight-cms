@@ -15,29 +15,7 @@ class CacheClearCommand extends AbstractBaseCommand
 
     public function execute(): void
     {
-        $root = dirname(__DIR__, 2);
-        foreach (['storage/cache/pages', 'storage/cache/twig'] as $dir) {
-            $path = $root . '/' . $dir;
-            if (is_dir($path)) {
-                $this->wipe($path);
-            }
-        }
+        \App\Core\Cache::clear(dirname(__DIR__, 2));
         $this->app()->io()->ok('Caches cleared.');
-    }
-
-    private function wipe(string $dir): void
-    {
-        foreach (scandir($dir) ?: [] as $name) {
-            if ($name === '.' || $name === '..' || $name === '.gitkeep') {
-                continue;
-            }
-            $path = $dir . DIRECTORY_SEPARATOR . $name;
-            if (is_dir($path)) {
-                $this->wipe($path);
-                @rmdir($path);
-                continue;
-            }
-            @unlink($path);
-        }
     }
 }

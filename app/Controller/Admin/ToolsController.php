@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Core\Cache;
 use App\Core\Migrator;
 use App\Support\Row;
 
@@ -80,11 +81,8 @@ class ToolsController extends DashboardController
     public function purgeCache(): void
     {
         $this->forbid('manage_options');
-        $dir = $this->app->get('root') . '/storage/cache/pages';
-        foreach (glob($dir . '/*') ?: [] as $file) {
-            @unlink($file);
-        }
-        $this->flash->set('success', 'Cache purged.');
+        Cache::clear((string) $this->app->get('root'));
+        $this->flash->set('success', 'Page cache, templates, and image thumbs cleared.');
         $this->redirect('/admin/tools');
     }
 
