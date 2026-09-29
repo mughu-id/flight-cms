@@ -39,4 +39,5 @@ class CacheClearCommand extends AbstractBaseCommand
             }
             @unlink($path);
         }
+    }
 }
